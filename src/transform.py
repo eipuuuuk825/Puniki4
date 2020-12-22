@@ -6,20 +6,20 @@ import param as pa
 # raw：ディスプレイ上の座標系（マウスカーソルの位置指定に使用）
 
 def ball_main(pos):
-    xd = pos[0] + pa.RECT_BALL[2] - pa.RECT_MAIN[2]
-    yd = pos[1] + pa.RECT_BALL[0] - pa.RECT_MAIN[0]
+    xd = pos[0] + pa.RECT_BALL[0] - pa.RECT_MAIN[0]
+    yd = pos[1] + pa.RECT_BALL[1] - pa.RECT_MAIN[1]
     return (xd, yd)
 
 
 def main_cap(pos):
-    xd = pos[0] + pa.RECT_MAIN[2]
-    yd = pos[1] + pa.RECT_MAIN[0]
+    xd = pos[0] + pa.RECT_MAIN[0]
+    yd = pos[1] + pa.RECT_MAIN[1]
     return (xd, yd)
 
 
 def cap_main(pos):
-    xd = pos[0] - pa.RECT_MAIN[2]
-    yd = pos[1] - pa.RECT_MAIN[0]
+    xd = pos[0] - pa.RECT_MAIN[0]
+    yd = pos[1] - pa.RECT_MAIN[1]
     return (xd, yd)
 
 

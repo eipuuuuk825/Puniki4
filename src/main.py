@@ -16,7 +16,16 @@ user32 = windll.user32
 
 def main():
     # グラフ
-    graphWin = plot.PlotGraph()
+    g_f = plot.PlotGraph('program frequency',
+                         u'動作周波数 [Hz]',
+                         max_y=60,
+                         size=(500, 200),
+                         pos=(840, 350))
+    g_ball = plot.PlotGraph('ball y',
+                            u'y [px]',
+                            max_y=-1,
+                            size=(500, 200),
+                            pos=(840, 600))
 
     # 初期化処理
     capture = cap.init_camera()     # カメラ初期設定
@@ -27,37 +36,42 @@ def main():
 
     # フラグ
     start_flag = True          # 最初のジャッジが行われるまで開始しない
-    detect_flag = True         # ボールの検出を行うか
+    detect_flag = 0         # ボールの検出を行うか
+    judge_pre = "None"
+    judge_curr = "None"
 
+    # while(time_sum < 5):
     while(True):
         img_cap, img_main, img_bin = cap.prepare_img(capture)    # 画像を用意
-        # swing.process(ball)                         # スイング処理
-        judgement = judge.judge(img_main)           # 球のジャッジ
+        # swing.process(ball)               # スイング処理
+        judge_pre = judge_curr              # judge を更新
+        judge_curr = judge.judge(img_main)  # 球のジャッジ
 
         # 最初のジャッジが行われるまで開始しない
-        if judgement != "None":
+        if judge_curr != "None":
             start_flag = True
         if start_flag == False:
             continue
 
+        # ボール位置を取得（main 座標系）
+        ball.get_pos(img_bin)
+
         # detect_flag の管理
-        # detect_flag = judgement == "None" and ball.is_throwing()
-        # print(ball.is_throwing())
+        if judge_pre != "None" and judge_curr == "None":
+            detect_flag = 1
+        if detect_flag == 1 and ball.tmp_pos[1] != (0, 0):
+            detect_flag = 2
+        if detect_flag == 2 and ball.tmp_pos[1] == (0, 0):
+            detect_flag = 0
 
-        ball.get_pos(img_bin)  # ボール位置を取得（main 座標系）
-        if detect_flag == True:
-            ball.append()          # ボール位置を追加
+        # ボール位置を保存
+        if detect_flag == 2:
+            g_ball.append(ball.tmp_pos[1][1])
+            ball.append()
         else:
+            for i in ball.pos:
+                print(i)
             ball.clear()
-
-        # print(len(ball.pos))
-        print(ball.tmp_pos)
-
-        #
-        # 30 秒経過で終了
-        #
-        # if time_sum > 30:
-        #     break
 
         #
         # ウィンドウ関連
@@ -67,14 +81,14 @@ def main():
         freq = (int)(1.0 / (time_e - time_s))
         time_sum += time_e - time_s
         time_s = time_e
-        graphWin.append(freq)   # 描画用にデータを追加
+        g_f.append(freq)   # 描画用にデータを追加
         # キー入力
         hit_key = cv2.waitKey(1) & 0xFF
         if hit_key == ord('q'):
             break
         # ウィンドウに文字列表示
         cv2.rectangle(img_main, (5, 5), (150, 75), pa.WHITE, thickness=-1)
-        cv2.putText(img_main, judgement, (15, 30), cv2.FONT_HERSHEY_SIMPLEX,
+        cv2.putText(img_main, judge_curr, (15, 30), cv2.FONT_HERSHEY_SIMPLEX,
                     0.8, pa.RED, 2)
         # ボールの検出領域
         cv2.rectangle(img_main,
@@ -83,7 +97,7 @@ def main():
                        pa.RECT_BALL_IN_MAIN[1]+pa.RECT_BALL_IN_MAIN[3]),
                       pa.WHITE, thickness=2)
         # 検出したボールを表示
-        cv2.circle(img_main, ball.tmp_pos, 10, pa.RED, 5)
+        cv2.circle(img_main, ball.tmp_pos[1], 1, pa.RED, 5)
         # cv2.circle(img_main, (100, 100), 10, pa.RED, 5)
 
         # ウィンドウ表示
@@ -139,14 +153,14 @@ class Swing:
 class Ball:
     def __init__(self):
         self.pos = []       # ボール位置のリスト
-        self.tmp_pos = ()   # 求めた位置を一時的に保管
+        # 求めた位置を一時的に保管（0 : previous, 1 : current）
+        self.tmp_pos = [(0, 0), (0, 0)]
 
     def clear(self):
         self.pos.clear()
 
     def append(self):
-        if self.tmp_pos != (0, 0):
-            self.pos.append(self.tmp_pos)  # ボール位置をリストに追加
+        self.pos.append(self.tmp_pos[1])  # ボール位置をリストに追加
 
     def len(self):
         return len(self.pos)
@@ -155,21 +169,14 @@ class Ball:
     # ボール位置を求める（main 座標系で取得）
     #
     def get_pos(self, img_bin):
-        ball_pos = (0, 0)
+        self.tmp_pos[0] = self.tmp_pos[1]   # previous を保存
+        self.tmp_pos[1] = (0, 0)            # current を初期化
         mu = cv2.moments(img_bin, False)
         # 重心を計算
         if mu["m00"] != 0:
-            ball_pos = (int(mu["m10"]/mu["m00"]), int(mu["m01"]/mu["m00"]))
-            ball_pos = tr.ball_main(ball_pos)  # ball -> main へ座標変換
-        self.tmp_pos = ball_pos
-
-    #
-    # ボールが y+ 方向に移動しているか
-    #
-    def is_throwing(self):
-        if len(self.pos) == 0:
-            return True
-        return self.tmp_pos[1] > self.pos[-1][1]
+            self.tmp_pos[1] = (int(mu["m10"]/mu["m00"]),
+                               int(mu["m01"]/mu["m00"]))
+            self.tmp_pos[1] = tr.ball_main(self.tmp_pos[1])  # ball -> main へ変換
 
 
 if __name__ == '__main__':
