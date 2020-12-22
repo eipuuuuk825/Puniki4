@@ -28,15 +28,16 @@ def main():
                             pos=(840, 600))
 
     # 初期化処理
-    capture = cap.init_camera()     # カメラ初期設定
+    capture = cap.init_camera()  # カメラ初期設定
     time_s = time.time()        # 処理時間
     time_sum = 0                # 終了処理関係
+    time_throw = 0              # ボールが投げられてから経過した時間
     # swing = Swing()             # スイング管理
     ball = Ball()               # ボール管理
 
     # フラグ
-    start_flag = True          # 最初のジャッジが行われるまで開始しない
-    detect_flag = 0         # ボールの検出を行うか
+    start_flag = True           # 最初のジャッジが行われるまで開始しない
+    detect_flag = 0             # ボールの検出を行うか
     judge_pre = "None"
     judge_curr = "None"
 
@@ -62,16 +63,18 @@ def main():
         if detect_flag == 1 and ball.tmp_pos[1] != (0, 0):
             detect_flag = 2
         if detect_flag == 2 and ball.tmp_pos[1] == (0, 0):
+            ball.output(time_sum)
+            ball.clear()
             detect_flag = 0
+
+        # ボールが投げられてからの時間を計測
+        if detect_flag != 2:
+            time_throw = time.time()
 
         # ボール位置を保存
         if detect_flag == 2:
             g_ball.append(ball.tmp_pos[1][1])
-            ball.append()
-        else:
-            for i in ball.pos:
-                print(i)
-            ball.clear()
+            ball.append(time.time() - time_throw)
 
         #
         # ウィンドウ関連
@@ -152,18 +155,18 @@ class Swing:
 #
 class Ball:
     def __init__(self):
-        self.pos = []       # ボール位置のリスト
+        self.data = []       # (x, y, t) のリスト
         # 求めた位置を一時的に保管（0 : previous, 1 : current）
         self.tmp_pos = [(0, 0), (0, 0)]
 
     def clear(self):
-        self.pos.clear()
+        self.data.clear()
 
-    def append(self):
-        self.pos.append(self.tmp_pos[1])  # ボール位置をリストに追加
+    def append(self, time):
+        self.data.append((self.tmp_pos[1][0], self.tmp_pos[1][1], time))
 
     def len(self):
-        return len(self.pos)
+        return len(self.data)
 
     #
     # ボール位置を求める（main 座標系で取得）
@@ -177,6 +180,16 @@ class Ball:
             self.tmp_pos[1] = (int(mu["m10"]/mu["m00"]),
                                int(mu["m01"]/mu["m00"]))
             self.tmp_pos[1] = tr.ball_main(self.tmp_pos[1])  # ball -> main へ変換
+
+    #
+    # データを出力
+    #
+    def output(self, time):
+        file = "./../data/" + str(time) + ".csv"
+        with open(file, "w") as fileobj:
+            for i in self.data:
+                # print(str(i[0]) + ", " + str(i[1]) + ", " + str(i[2]))
+                fileobj.write(str(i[0])+", "+str(i[1])+", "+str(i[2])+"\n")
 
 
 if __name__ == '__main__':
