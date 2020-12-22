@@ -1,19 +1,25 @@
-import judge
-import param as pa
+# 自分の
 import transform as tr
+import param as pa
+import judge
+import plot
+import capture as cap
 import cv2
 import numpy as np
 import time
 import math
+import sys
 # windows API
 from ctypes import *
 user32 = windll.user32
-# 自分の
 
 
 def main():
+    # グラフ
+    graphWin = plot.PlotGraph()
+
     # 初期化処理
-    capture = init_camera()     # カメラ初期設定
+    capture = cap.init_camera()     # カメラ初期設定
     time_s = time.time()        # 処理時間
     time_sum = 0                # 終了処理関係
     # swing = Swing()             # スイング管理
@@ -21,10 +27,10 @@ def main():
 
     # フラグ
     start_flag = True          # 最初のジャッジが行われるまで開始しない
-    detect_flag = False         # ボールの検出を行うか
+    detect_flag = True         # ボールの検出を行うか
 
     while(True):
-        img_main, img_bin = prepare_img(capture)    # 画像を用意
+        img_cap, img_main, img_bin = cap.prepare_img(capture)    # 画像を用意
         # swing.process(ball)                         # スイング処理
         judgement = judge.judge(img_main)           # 球のジャッジ
 
@@ -35,13 +41,17 @@ def main():
             continue
 
         # detect_flag の管理
-        detect_flag = judgement == "None" and ball.is_throwing()
+        # detect_flag = judgement == "None" and ball.is_throwing()
+        # print(ball.is_throwing())
 
         ball.get_pos(img_bin)  # ボール位置を取得（main 座標系）
         if detect_flag == True:
             ball.append()          # ボール位置を追加
         else:
             ball.clear()
+
+        # print(len(ball.pos))
+        print(ball.tmp_pos)
 
         #
         # 30 秒経過で終了
@@ -57,64 +67,37 @@ def main():
         freq = (int)(1.0 / (time_e - time_s))
         time_sum += time_e - time_s
         time_s = time_e
+        graphWin.append(freq)   # 描画用にデータを追加
         # キー入力
         hit_key = cv2.waitKey(1) & 0xFF
         if hit_key == ord('q'):
             break
         # ウィンドウに文字列表示
         cv2.rectangle(img_main, (5, 5), (150, 75), pa.WHITE, thickness=-1)
-        cv2.putText(img_main, str(freq) + " [Hz]", (15, 30), cv2.FONT_HERSHEY_SIMPLEX,
-                    0.8, pa.RED, 2)
-        cv2.putText(img_main, judgement, (15, 60), cv2.FONT_HERSHEY_SIMPLEX,
+        cv2.putText(img_main, judgement, (15, 30), cv2.FONT_HERSHEY_SIMPLEX,
                     0.8, pa.RED, 2)
         # ボールの検出領域
-        cv2.rectangle(img_main, pa.RECT_BALL_IN_MAIN, pa.WHITE, thickness=2)
+        cv2.rectangle(img_main,
+                      (pa.RECT_BALL_IN_MAIN[0], pa.RECT_BALL_IN_MAIN[1]),
+                      (pa.RECT_BALL_IN_MAIN[0]+pa.RECT_BALL_IN_MAIN[2],
+                       pa.RECT_BALL_IN_MAIN[1]+pa.RECT_BALL_IN_MAIN[3]),
+                      pa.WHITE, thickness=2)
+        # 検出したボールを表示
+        cv2.circle(img_main, ball.tmp_pos, 10, pa.RED, 5)
+        # cv2.circle(img_main, (100, 100), 10, pa.RED, 5)
 
         # ウィンドウ表示
         cv2.imshow('win', img_main)
-        cv2.moveWindow('win', 100, 100)
+        cv2.moveWindow('win', 10, 10)
         cv2.imshow('hsv', img_bin)
-        cv2.moveWindow('hsv', 930, 100)
+        cv2.moveWindow('hsv', 840, 10)
     #
     # 終了処理
     #
     capture.release()
     cv2.destroyAllWindows()
-
-
-#
-# カメラ初期化処理
-#
-def init_camera():
-    # VideoCapture オブジェクトを取得
-    capture = cv2.VideoCapture(1)
-    # カメラの設定
-    capture.set(cv2.CAP_PROP_FRAME_WIDTH, pa.CAP_WIDTH)
-    capture.set(cv2.CAP_PROP_FRAME_HEIGHT, pa.CAP_HEIGHT)
-    capture.set(cv2.CAP_PROP_FPS, 30)   # なぜか 60 を指定しても 60fps にならない
-    return capture
-
-
-#
-# 画像の前処理
-#
-def prepare_img(capture):
-    # ret : フレームの画像を読み込めたかどうかを返す
-    ret, img_cap = capture.read()
-    if ret == False:
-        print("capture.read err")
-        exit()
-    # 切り抜き
-    img_main = img_cap[pa.RECT_MAIN[1]: pa.RECT_MAIN[1]+pa.RECT_MAIN[3],
-                       pa.RECT_MAIN[0]: pa.RECT_MAIN[0]+pa.RECT_MAIN[2]]
-    img_ball = img_cap[pa.RECT_BALL[1]: pa.RECT_BALL[1]+pa.RECT_BALL[3],
-                       pa.RECT_BALL[0]: pa.RECT_BALL[0]+pa.RECT_BALL[2]]
-    # HSV に変換
-    img_hsv = cv2.cvtColor(img_ball, cv2.COLOR_BGR2HSV)
-    # 二値化
-    img_bin = cv2.inRange(img_hsv, np.array(
-        [0, 0, 200]), np.array([255, 15, 255]))
-    return img_main, img_bin
+    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
+        QtGui.QApplication.instance().exec_()
 
 
 #
@@ -183,7 +166,6 @@ class Ball:
     #
     # ボールが y+ 方向に移動しているか
     #
-
     def is_throwing(self):
         if len(self.pos) == 0:
             return True

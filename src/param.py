@@ -5,6 +5,7 @@ RAW_HEIGHT = 767
 RAW_WIDTH = 1365
 CAP_HEIGHT = 720
 CAP_WIDTH = 1280
+SECOND_WINDOW_OFFSET = (128, -768)
 
 #
 # cap に対する切り抜き領域（x, y, width, height）
