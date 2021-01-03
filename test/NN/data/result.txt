@@ -1,0 +1,14 @@
+wrong_judgement		output = 0.00500911, 0.888197, 0.12412, 	answer = 0, 0, 1, 
+wrong_judgement		output = 0.00256392, 0.40802, 0.628142, 	answer = 0, 1, 0, 
+wrong_judgement		output = 0.00101683, 0.0232114, 0.980793, 	answer = 0, 1, 0, 
+wrong_judgement		output = 0.00110608, 0.0300603, 0.974654, 	answer = 0, 1, 0, 
+wrong_judgement		output = 0.000975619, 0.0203247, 0.983294, 	answer = 0, 1, 0, 
+wrong_judgement		output = 0.0149484, 0.981111, 0.00965396, 	answer = 0, 0, 1, 
+wrong_judgement		output = 0.537293, 0.490085, 0.00147513, 	answer = 0, 1, 0, 
+
+result_table
+32, 1, 0, 
+0, 27, 2, 
+0, 4, 34, 
+
+accuracy rate = 0.93
