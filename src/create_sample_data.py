@@ -9,7 +9,8 @@ import numpy as np
 data_raw_dir = "../data_raw/"
 data_sample_dir = "../data_sample/"
 yt = 350                # x と t を予測する y 座標
-input_point_num = 12     # 入力データとして使う座標の数
+first_input_num = 0     # 入力する最初の座標
+input_point_num = 6     # 入力データとして使う座標の数
 input_point_step = 1    # 入力する座標の間隔
 max_point_num = 20      # 入力として使える座標の最大個数
 use_y_data = True      # y 座標のデータを使うか
@@ -43,11 +44,11 @@ def normalize(x, y, t, xt, tt):
         exit()
 
     # データを合体する
-    x_input = np.array(x)[:, 0:input_point_num *
+    x_input = np.array(x)[:, first_input_num:first_input_num + input_point_num *
                           input_point_step:input_point_step]
-    y_input = np.array(y)[:, 0:input_point_num *
+    y_input = np.array(y)[:, first_input_num:first_input_num + input_point_num *
                           input_point_step:input_point_step]
-    t_input = np.array(t)[:, 0:input_point_num *
+    t_input = np.array(t)[:, first_input_num:first_input_num + input_point_num *
                           input_point_step:input_point_step]
 
     data_array = np.array(x_input)
@@ -68,7 +69,7 @@ def normalize(x, y, t, xt, tt):
         for j in range(data_array.shape[1]):
             data_array[i, j] = (data_array[i, j] - mean[j])/std[j]
 
-    return data_array
+    return data_array, (mean[-2], mean[-1]), (std[-2], std[-1])
 
 
 def main():
@@ -86,6 +87,7 @@ def main():
     t = []
     xt = []
     tt = []
+    dx = [] # 最終の x - 最初の x
     for in_file in range(len(files)):
         xi = []
         yi = []
@@ -105,25 +107,34 @@ def main():
         x.append(xi[0:max_point_num])
         y.append(yi[0:max_point_num])
         t.append(ti[0:max_point_num])
+        dx.append(xi[-1]-xi[0])
 
         # 教師データ xt, tt を求める
         xti, tti = calc_teacher_data(xi, yi, ti)
         xt.append(xti)
         tt.append(tti)
 
-    normalised_data = normalize(x, y, t, xt, tt)
+    # データを規格化
+    normalised_data, t_mean, t_std = normalize(x, y, t, xt, tt)
 
     #
     # サンプルデータを書き出す
     #
     out_file = data_sample_dir + \
         str(datetime.datetime.now()).replace(":", ".")+".csv"
+    sep = " "  # 区切る文字
     with open(out_file, "w") as out_fileobj:
+        out_fileobj.write(
+            str(t_mean[0])+sep+str(t_std[0])+sep+str(t_mean[1])+sep+str(t_std[1])+"\n")
         for i in normalised_data:
             for j in i:
-                out_fileobj.write(str(j)+" ")
+                out_fileobj.write(str(j)+sep)
             out_fileobj.write("\n")
 
+    # dx を出力
+    with open("../data_sample/dx.csv", "w") as fileobj:
+        for i in dx:
+            fileobj.write(str(i)+"\n")
 
 if __name__ == '__main__':
     main()
