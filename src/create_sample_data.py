@@ -8,8 +8,11 @@ import numpy as np
 # パラメータ
 data_raw_dir = "../data_raw/"
 data_sample_dir = "../data_sample/"
-yt = 350            # x と t を予測する y 座標
-input_point_num = 6  # 入力データとして使う座標の数
+yt = 350                # x と t を予測する y 座標
+input_point_num = 12     # 入力データとして使う座標の数
+input_point_step = 1    # 入力する座標の間隔
+max_point_num = 20      # 入力として使える座標の最大個数
+use_y_data = True      # y 座標のデータを使うか
 
 
 def calc_teacher_data(x, y, t):
@@ -40,9 +43,17 @@ def normalize(x, y, t, xt, tt):
         exit()
 
     # データを合体する
-    data_array = np.array(x)
-    data_array = np.append(data_array, y, axis=1)
-    data_array = np.append(data_array, t, axis=1)
+    x_input = np.array(x)[:, 0:input_point_num *
+                          input_point_step:input_point_step]
+    y_input = np.array(y)[:, 0:input_point_num *
+                          input_point_step:input_point_step]
+    t_input = np.array(t)[:, 0:input_point_num *
+                          input_point_step:input_point_step]
+
+    data_array = np.array(x_input)
+    if use_y_data:
+        data_array = np.append(data_array, y_input, axis=1)
+    data_array = np.append(data_array, t_input, axis=1)
     xt_array = np.array(xt).reshape(len(xt), 1)
     tt_array = np.array(tt).reshape(len(tt), 1)
     data_array = np.append(data_array, xt_array, axis=1)
@@ -91,9 +102,9 @@ def main():
                     ti.append(data_list[2])
                 else:
                     break
-        x.append(xi[0:input_point_num])
-        y.append(yi[0:input_point_num])
-        t.append(ti[0:input_point_num])
+        x.append(xi[0:max_point_num])
+        y.append(yi[0:max_point_num])
+        t.append(ti[0:max_point_num])
 
         # 教師データ xt, tt を求める
         xti, tti = calc_teacher_data(xi, yi, ti)
@@ -112,6 +123,7 @@ def main():
             for j in i:
                 out_fileobj.write(str(j)+" ")
             out_fileobj.write("\n")
+
 
 if __name__ == '__main__':
     main()

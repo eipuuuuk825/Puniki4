@@ -32,6 +32,19 @@ int main(void)
 {
 	/*-----------------------------------------------
 	*
+	* パラメータ
+	*
+	-----------------------------------------------*/
+	enum
+	{
+		DATA_XT_6 = 12,
+		DATA_XYT_6 = 18,
+		DATA_XYT_12 = 36
+	};
+	size_t input_data_dim = DATA_XYT_6; /* 入力データの次元 */
+
+	/*-----------------------------------------------
+	*
 	* サンプルデータを読み込む
 	*
 	-----------------------------------------------*/
@@ -58,8 +71,8 @@ int main(void)
 	vector<vector<double>> x, t;
 	for (auto &&e : table)
 	{
-		vector<double> tmp_x(e.begin(), e.begin() + 18);
-		vector<double> tmp_t(e.begin() + 18, e.end());
+		vector<double> tmp_x(e.begin(), e.begin() + input_data_dim);
+		vector<double> tmp_t(e.begin() + input_data_dim, e.end());
 		x.push_back(std::move(tmp_x));
 		t.push_back(std::move(tmp_t));
 	}
@@ -75,7 +88,7 @@ int main(void)
 	vector<vector<double>> t_l(t.begin(), t.begin() + 50);
 	vector<vector<double>> t_t(t.begin() + 50, t.end());
 
-	so::NeuralNetwork nn({15, 12, 9, 6, 3}, 0.5);
+	so::NeuralNetwork nn({18, 10, 2}, 0.5);
 	{
 		//E履歴出力用ファイル作成
 		std::ofstream ofs("../data_sample/E.csv");
