@@ -9,6 +9,7 @@ import numpy as np
 import time
 import math
 import sys
+import datetime  # 現在時刻取得
 # windows API
 from ctypes import *
 user32 = windll.user32
@@ -36,14 +37,21 @@ def main():
     ball = Ball()               # ボール管理
 
     # フラグ
-    start_flag = True           # 最初のジャッジが行われるまで開始しない
+    start_flag = False          # 最初のジャッジが行われるまで開始しない
     detect_flag = 0             # ボールの検出を行うか
     judge_pre = "None"
     judge_curr = "None"
 
     # while(time_sum < 5):
     while(True):
-        img_cap, img_main, img_bin = cap.prepare_img(capture)    # 画像を用意
+        # キー入力
+        hit_key = cv2.waitKey(1) & 0xFF
+        if hit_key == ord('q'):
+            break
+
+        # 画像を用意
+        img_cap, img_main, img_bin = cap.prepare_img(capture)
+
         # swing.process(ball)               # スイング処理
         judge_pre = judge_curr              # judge を更新
         judge_curr = judge.judge(img_main)  # 球のジャッジ
@@ -57,13 +65,20 @@ def main():
         # ボール位置を取得（main 座標系）
         ball.get_pos(img_bin)
 
+        # 終了
+        if judge_curr == "Finish":
+            ball.clear()
+            detect_flag = 0
+            start_flag = False
+            continue
+
         # detect_flag の管理
         if judge_pre != "None" and judge_curr == "None":
             detect_flag = 1
         if detect_flag == 1 and ball.tmp_pos[1] != (0, 0):
             detect_flag = 2
         if detect_flag == 2 and ball.tmp_pos[1] == (0, 0):
-            ball.output(time_sum)
+            ball.output()
             ball.clear()
             detect_flag = 0
 
@@ -85,10 +100,7 @@ def main():
         time_sum += time_e - time_s
         time_s = time_e
         g_f.append(freq)   # 描画用にデータを追加
-        # キー入力
-        hit_key = cv2.waitKey(1) & 0xFF
-        if hit_key == ord('q'):
-            break
+
         # ウィンドウに文字列表示
         cv2.rectangle(img_main, (5, 5), (150, 75), pa.WHITE, thickness=-1)
         cv2.putText(img_main, judge_curr, (15, 30), cv2.FONT_HERSHEY_SIMPLEX,
@@ -101,7 +113,6 @@ def main():
                       pa.WHITE, thickness=2)
         # 検出したボールを表示
         cv2.circle(img_main, ball.tmp_pos[1], 1, pa.RED, 5)
-        # cv2.circle(img_main, (100, 100), 10, pa.RED, 5)
 
         # ウィンドウ表示
         cv2.imshow('win', img_main)
@@ -184,11 +195,12 @@ class Ball:
     #
     # データを出力
     #
-    def output(self, time):
-        file = "./../data/" + str(time) + ".csv"
+    def output(self):
+        filename = str(datetime.datetime.now()).replace(":", ".")
+        print(filename)
+        file = "./../data_raw/" + filename + ".csv"
         with open(file, "w") as fileobj:
             for i in self.data:
-                # print(str(i[0]) + ", " + str(i[1]) + ", " + str(i[2]))
                 fileobj.write(str(i[0])+", "+str(i[1])+", "+str(i[2])+"\n")
 
 
