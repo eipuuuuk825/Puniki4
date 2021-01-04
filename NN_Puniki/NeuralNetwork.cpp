@@ -5,10 +5,14 @@
 #include <cmath>
 #include <random>
 #include <functional>
+#include <iostream>
 #include <ostream>
 #include <ios>
 #include <stdexcept>
 #include <string>
+
+using std::cout;
+using std::endl;
 
 //シグモイド関数
 namespace
@@ -73,6 +77,32 @@ void so::NeuralNetwork::reset()
 		for (size_t k = 1; k < n[l + 1] + 1; ++k)
 			for (size_t i = 0; i < n[l] + 1; ++i)
 				w[l][k][i] = dist(engine); //初期化
+
+	// vector<vector<vector<double>>> my_w;
+	// vector<vector<double>> tmp1 = {
+	// 	{0, 0, 0},
+	// 	{0.557229, -0.18088, -0.902298},
+	// 	{-0.156361, 0.283648, 0.219721}};
+	// my_w.emplace_back(tmp1);
+	// vector<vector<double>> tmp2 = {
+	// 	{0, 0, 0},
+	// 	{-0.640767, -0.526888, -0.728733},
+	// 	{-0.965611, -0.0015774, -0.899652}};
+	// my_w.emplace_back(tmp2);
+	// w = my_w;
+
+	/* debug */
+	// cout << "*** w ***" << endl;
+	// for (auto i : w)
+	// {
+	// 	for (auto j : i)
+	// 	{
+	// 		for (auto k : j)
+	// 			cout << k << ", ";
+	// 		cout << endl;
+	// 	}
+	// 	cout << "----------------" << endl;
+	// }
 }
 
 std::vector<double> so::NeuralNetwork::compute(const vector<double> &x)
@@ -91,10 +121,25 @@ std::vector<double> so::NeuralNetwork::compute(const vector<double> &x)
 			{
 				sum += z[l - 1][i] * w[l - 1][k][i];
 			}
-			z[l][k] = sigmoid(sum);
+
+			/* 出力の計算 */
+			if (l == L - 1)
+				z[l][k] = sum; // 出力層だけ恒等写像
+			else
+				z[l][k] = sigmoid(sum);
 		}
 	}
 	vector<double> output(z[L - 1].begin() + 1, z[L - 1].end()); //最終層の出力を格納
+
+	/* debug */
+	// cout << "*** z ***" << endl;
+	// for (auto i : z)
+	// {
+	// 	for (auto j : i)
+	// 		cout << j << ", ";
+	// 	cout << endl;
+	// }
+
 	return std::move(output);
 }
 
@@ -103,7 +148,8 @@ void so::NeuralNetwork::back_propagation(const vector<double> &t)
 	//出力層について計算、重みを更新
 	for (size_t j = 1; j < n[L - 1] + 1; ++j)
 	{
-		d[L - 1][j] = -(t[j - 1] - z[L - 1][j]) * z[L - 1][j] * (1.0 - z[L - 1][j]);
+		// d[L - 1][j] = -(t[j - 1] - z[L - 1][j]) * z[L - 1][j] * (1.0 - z[L - 1][j]);
+		d[L - 1][j] = -(t[j - 1] - z[L - 1][j]);
 		for (size_t i = 0; i < n[L - 2] + 1; ++i)
 		{
 			w[L - 2][j][i] -= eta * d[L - 1][j] * z[L - 2][i];
@@ -120,12 +166,33 @@ void so::NeuralNetwork::back_propagation(const vector<double> &t)
 				sum += d[l + 1][k] * w[l][k][j];
 			}
 			d[l][j] = sum * z[l][j] * (1 - z[l][j]);
+			// d[l][j] = sum;
 			for (size_t i = 0; i < n[l - 1] + 1; ++i)
 			{
 				w[l - 1][j][i] -= eta * d[l][j] * z[l - 1][i];
 			}
 		}
 	}
+
+	/* debug */
+	// cout << "*** d ***" << endl;
+	// for (auto i : d)
+	// {
+	// 	for (auto j : i)
+	// 		cout << j << ", ";
+	// 	cout << endl;
+	// }
+	// cout << "*** w ***" << endl;
+	// for (auto i : w)
+	// {
+	// 	for (auto j : i)
+	// 	{
+	// 		for (auto k : j)
+	// 			cout << k << ", ";
+	// 		cout << endl;
+	// 	}
+	// 	cout << "----------------" << endl;
+	// }
 }
 
 void so::NeuralNetwork::autoencoder(const vector<vector<double>> &x_v, int l, double epsilon, int limit, const std::string &convergence_mode)
@@ -268,6 +335,9 @@ double so::NeuralNetwork::error(const vector<double> &t) const
 	double sum = 0.0;
 	for (size_t j = 1; j <= n[L - 1]; ++j)
 		sum += std::pow((t[j - 1] - z[L - 1][j]), 2); //教師ベクトルの添え字は0から始まる。一方出力の0番目はバイアス項となっている
+	/* debug */
+	// cout << "*** error ***\n"
+	// 	 << 0.5 * sum << endl;
 	return 0.5 * sum;
 }
 
