@@ -1,3 +1,11 @@
+#ifdef __GNUC__ /* GCC */
+#define __FNAME__ __PRETTY_FUNCTION__
+#elif _MSC_VER /* Visual C++ */
+#define __FNAME__ __FUNCSIG__
+#else
+#define __FNAME__ __func__
+#endif
+
 #include "NeuralNetwork.hpp"
 #include <array>
 #include <vector>
@@ -5,35 +13,44 @@
 #include <cmath>
 #include <random>
 #include <functional>
-#include <iostream>
 #include <ostream>
 #include <ios>
 #include <stdexcept>
 #include <string>
+#include <sstream>
 
-using std::cout;
-using std::endl;
-
-//シグモイド関数
 namespace
 {
+	//シグモイド関数
 	double sigmoid(double x) { return 1.0 / (1.0 + std::exp(-x)); }
-} // namespace
 
-//エラーEの履歴のファイル出力用関数の定義
-template <typename Seq>
-void output_sequence(const Seq &seq, std::ostream *os)
-{
-	if (os != nullptr)
-		for (auto &&e : seq)
-			*os << e << std::endl;
-}
+	//エラーEの履歴のファイル出力用関数の定義
+	template <typename Seq>
+	void output_sequence(const Seq &seq, std::ostream *os)
+	{
+		if (os != nullptr)
+			for (auto &&e : seq)
+				*os << e << std::endl;
+	}
+
+	/* 例外処理用 */
+	void my_exception(const char *func, const std::string msg)
+	{
+		std::stringstream sstr;
+		sstr << "In [" << func << "], " << msg;
+		throw std::runtime_error(sstr.str());
+	}
+} // namespace
 
 //NeuralNetworkのコンストラクタ
 //重み、逆伝播する誤差、各ニューロンの出力の配列を生成
-so::NeuralNetwork::NeuralNetwork(const vector<size_t> &n_, double eta_)
-	: n(n_), L(n.size()), eta(eta_)
+so::NeuralNetwork::NeuralNetwork(const vector<size_t> &n_, double eta_, std::string nn_mode_)
+	: n(n_), L(n.size()), eta(eta_), nn_mode(nn_mode_)
 {
+	/* nn_mode のエラーチェック */
+	if (nn_mode != MODE_C and nn_mode != MODE_R)
+		my_exception(__FNAME__, "invalid nn_mode");
+
 	z.resize(L);
 	for (size_t l = 0; l < L; ++l)
 	{
@@ -77,37 +94,10 @@ void so::NeuralNetwork::reset()
 		for (size_t k = 1; k < n[l + 1] + 1; ++k)
 			for (size_t i = 0; i < n[l] + 1; ++i)
 				w[l][k][i] = dist(engine); //初期化
-
-	// vector<vector<vector<double>>> my_w;
-	// vector<vector<double>> tmp1 = {
-	// 	{0, 0, 0},
-	// 	{0.557229, -0.18088, -0.902298},
-	// 	{-0.156361, 0.283648, 0.219721}};
-	// my_w.emplace_back(tmp1);
-	// vector<vector<double>> tmp2 = {
-	// 	{0, 0, 0},
-	// 	{-0.640767, -0.526888, -0.728733},
-	// 	{-0.965611, -0.0015774, -0.899652}};
-	// my_w.emplace_back(tmp2);
-	// w = my_w;
-
-	/* debug */
-	// cout << "*** w ***" << endl;
-	// for (auto i : w)
-	// {
-	// 	for (auto j : i)
-	// 	{
-	// 		for (auto k : j)
-	// 			cout << k << ", ";
-	// 		cout << endl;
-	// 	}
-	// 	cout << "----------------" << endl;
-	// }
 }
 
 std::vector<double> so::NeuralNetwork::compute(const vector<double> &x)
 {
-
 	for (size_t i = 1; i < n[0] + 1; ++i)
 	{
 		z[0][i] = x[i - 1]; //第0層へ入力ベクトルをセット
@@ -123,23 +113,13 @@ std::vector<double> so::NeuralNetwork::compute(const vector<double> &x)
 			}
 
 			/* 出力の計算 */
-			if (l == L - 1)
+			if (nn_mode == MODE_R and l == L - 1)
 				z[l][k] = sum; // 出力層だけ恒等写像
 			else
 				z[l][k] = sigmoid(sum);
 		}
 	}
 	vector<double> output(z[L - 1].begin() + 1, z[L - 1].end()); //最終層の出力を格納
-
-	/* debug */
-	// cout << "*** z ***" << endl;
-	// for (auto i : z)
-	// {
-	// 	for (auto j : i)
-	// 		cout << j << ", ";
-	// 	cout << endl;
-	// }
-
 	return std::move(output);
 }
 
@@ -148,8 +128,10 @@ void so::NeuralNetwork::back_propagation(const vector<double> &t)
 	//出力層について計算、重みを更新
 	for (size_t j = 1; j < n[L - 1] + 1; ++j)
 	{
-		// d[L - 1][j] = -(t[j - 1] - z[L - 1][j]) * z[L - 1][j] * (1.0 - z[L - 1][j]);
-		d[L - 1][j] = -(t[j - 1] - z[L - 1][j]);
+		if (nn_mode == MODE_C)
+			d[L - 1][j] = -(t[j - 1] - z[L - 1][j]) * z[L - 1][j] * (1.0 - z[L - 1][j]);
+		else
+			d[L - 1][j] = -(t[j - 1] - z[L - 1][j]); /* 回帰分析では出力層の活性化関数として恒等関数を用いるため */
 		for (size_t i = 0; i < n[L - 2] + 1; ++i)
 		{
 			w[L - 2][j][i] -= eta * d[L - 1][j] * z[L - 2][i];
@@ -166,37 +148,20 @@ void so::NeuralNetwork::back_propagation(const vector<double> &t)
 				sum += d[l + 1][k] * w[l][k][j];
 			}
 			d[l][j] = sum * z[l][j] * (1 - z[l][j]);
-			// d[l][j] = sum;
 			for (size_t i = 0; i < n[l - 1] + 1; ++i)
 			{
 				w[l - 1][j][i] -= eta * d[l][j] * z[l - 1][i];
 			}
 		}
 	}
-
-	/* debug */
-	// cout << "*** d ***" << endl;
-	// for (auto i : d)
-	// {
-	// 	for (auto j : i)
-	// 		cout << j << ", ";
-	// 	cout << endl;
-	// }
-	// cout << "*** w ***" << endl;
-	// for (auto i : w)
-	// {
-	// 	for (auto j : i)
-	// 	{
-	// 		for (auto k : j)
-	// 			cout << k << ", ";
-	// 		cout << endl;
-	// 	}
-	// 	cout << "----------------" << endl;
-	// }
 }
 
 void so::NeuralNetwork::autoencoder(const vector<vector<double>> &x_v, int l, double epsilon, int limit, const std::string &convergence_mode)
 {
+	/* nn_mode のエラーチェック */
+	if (nn_mode == MODE_R)
+		my_exception(__FNAME__, "回帰モードでの動作は未確認です");
+
 	//自己符号化器を作成する
 	//第l-1層と第l層を訓練する
 	//l層からl_decode層は恒等写像とする
@@ -278,6 +243,9 @@ void so::NeuralNetwork::autoencoder(const vector<vector<double>> &x_v, int l, do
 
 std::vector<double> so::NeuralNetwork::compute_lth_layer_output(const vector<double> &x, int u)
 {
+	/* nn_mode のエラーチェック */
+	if (nn_mode == MODE_R)
+		my_exception(__FNAME__, "回帰モードでの動作は未確認です");
 
 	for (size_t i = 1; i < n[0] + 1; ++i)
 	{
@@ -302,6 +270,10 @@ std::vector<double> so::NeuralNetwork::compute_lth_layer_output(const vector<dou
 
 void so::NeuralNetwork::prelearning(const vector<vector<double>> &x_v, double epsilon, int limit, const std::string &convergence_mode)
 {
+	/* nn_mode のエラーチェック */
+	if (nn_mode == MODE_R)
+		my_exception(__FNAME__, "回帰モードでの事前学習の動作は未確認です");
+
 	int p = x_v.size();
 	vector<vector<double>> output;
 	output.resize(p);
@@ -333,11 +305,8 @@ void so::NeuralNetwork::prelearning(const vector<vector<double>> &x_v, double ep
 double so::NeuralNetwork::error(const vector<double> &t) const
 {
 	double sum = 0.0;
-	for (size_t j = 1; j <= n[L - 1]; ++j)
+	for (size_t j = 1; j < n[L - 1] + 1; ++j)
 		sum += std::pow((t[j - 1] - z[L - 1][j]), 2); //教師ベクトルの添え字は0から始まる。一方出力の0番目はバイアス項となっている
-	/* debug */
-	// cout << "*** error ***\n"
-	// 	 << 0.5 * sum << endl;
 	return 0.5 * sum;
 }
 

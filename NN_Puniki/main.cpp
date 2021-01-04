@@ -30,7 +30,6 @@ int main(void)
 	const vector<size_t> neural_num{18, 10, 2};
 	const double eta = 0.1;
 	// const vector<size_t> neural_num{12, 7, 2};
-	// const vector<size_t> neural_num{2, 2, 2};
 
 	/*-----------------------------------------------
 	*
@@ -102,7 +101,7 @@ int main(void)
 	// vector<vector<double>> tt(t.begin(), t.begin() + 50);
 	// vector<vector<double>> tl(t.begin() + 50, t.end());
 
-	so::NeuralNetwork nn(neural_num, eta);
+	so::NeuralNetwork nn(neural_num, eta, "regression");
 	{
 		//E履歴出力用ファイル作成
 		std::ofstream ofs("E.csv");
@@ -131,17 +130,17 @@ int main(void)
 	{
 		vector<double> output = nn.compute(xt[i]); //NNで計算
 
-		// ofs_res << tt[i][0] << ", " << tt[i][1] << ", "
-		// 		<< output[0] << ", " << output[1] << endl;
+		ofs_res << tt[i][0] << ", " << tt[i][1] << ", "
+				<< output[0] << ", " << output[1] << endl;
 
-		double truex = unnormalize(xt_mean, xt_std, tt[i][0]);
-		double truet = unnormalize(tt_mean, tt_std, tt[i][1]);
-		double predictx = unnormalize(xt_mean, xt_std, output[0]);
-		double predictt = unnormalize(tt_mean, tt_std, output[1]);
-		double dx = predictx - truex;
-		double dt = predictt - truet;
-		ofs_res << truex << ", " << truet << ", "
-				<< predictx << ", " << predictt << endl;
+		// double truex = unnormalize(xt_mean, xt_std, tt[i][0]);
+		// double truet = unnormalize(tt_mean, tt_std, tt[i][1]);
+		// double predictx = unnormalize(xt_mean, xt_std, output[0]);
+		// double predictt = unnormalize(tt_mean, tt_std, output[1]);
+		// double dx = predictx - truex;
+		// double dt = predictt - truet;
+		// ofs_res << truex << ", " << truet << ", "
+		// 		<< predictx << ", " << predictt << endl;
 	}
 
 	return 0;

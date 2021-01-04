@@ -87,7 +87,6 @@ def main():
     t = []
     xt = []
     tt = []
-    dx = [] # 最終の x - 最初の x
     for in_file in range(len(files)):
         xi = []
         yi = []
@@ -107,7 +106,6 @@ def main():
         x.append(xi[0:max_point_num])
         y.append(yi[0:max_point_num])
         t.append(ti[0:max_point_num])
-        dx.append(xi[-1]-xi[0])
 
         # 教師データ xt, tt を求める
         xti, tti = calc_teacher_data(xi, yi, ti)
@@ -130,11 +128,6 @@ def main():
             for j in i:
                 out_fileobj.write(str(j)+sep)
             out_fileobj.write("\n")
-
-    # dx を出力
-    with open("../data_sample/dx.csv", "w") as fileobj:
-        for i in dx:
-            fileobj.write(str(i)+"\n")
 
 if __name__ == '__main__':
     main()
