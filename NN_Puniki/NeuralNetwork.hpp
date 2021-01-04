@@ -1,3 +1,10 @@
+#ifdef __GNUC__ /* GCC */
+#define __FNAME__ __PRETTY_FUNCTION__
+#elif _MSC_VER /* Visual C++ */
+#define __FNAME__ __FUNCSIG__
+#else
+#define __FNAME__ __func__
+#endif
 #include <vector>
 #include <string>
 #include <ostream>
