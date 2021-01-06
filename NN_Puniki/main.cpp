@@ -33,43 +33,32 @@ int main(void)
 
 	/*-----------------------------------------------
 	*
-	* サンプルデータを読み込む
+	* データセットを読み込む
 	*
 	-----------------------------------------------*/
-	vector<vector<double>> table;
-	std::ifstream ifs("../data_sample/1.csv");
+	std::ifstream ifs("../data_set/1.csv");
 	if (!ifs)
 		throw std::fstream::failure("Cannot open");
 	std::string line;
 
 	/* 教師データの平均，標準分散 */
-	double xt_mean = 0;
-	double xt_std = 0;
-	double tt_mean = 0;
-	double tt_std = 0;
+	double xt_mean;
+	double xt_std;
+	double tt_mean;
+	double tt_std;
 	std::getline(ifs, line);
 	{
-		std::istringstream line_s(line);
-		vector<double> line_v;
-		std::string temp;
-		while (std::getline(line_s, temp, ' '))
-			line_v.push_back(std::stod(temp));
-		xt_mean = line_v[0];
-		xt_std = line_v[1];
-		tt_mean = line_v[2];
-		tt_std = line_v[3];
+		vector<double> tmp = so::split(line, ' ');
+		xt_mean = tmp[0];
+		xt_std = tmp[1];
+		tt_mean = tmp[2];
+		tt_std = tmp[3];
 	}
 
-	/* サンプルデータ */
+	/* データセット */
+	vector<vector<double>> data_set;
 	while (std::getline(ifs, line))
-	{
-		std::istringstream line_s(line);
-		vector<double> line_v;
-		std::string temp;
-		while (std::getline(line_s, temp, ' '))
-			line_v.push_back(std::stod(temp));
-		table.push_back(std::move(line_v));
-	}
+		data_set.emplace_back(so::split(line, ' '));
 
 	/*-----------------------------------------------
 	*
@@ -77,7 +66,7 @@ int main(void)
 	*
 	-----------------------------------------------*/
 	vector<vector<double>> x, t;
-	for (auto &&e : table)
+	for (auto &&e : data_set)
 	{
 		vector<double> tmp_x(e.begin(), e.begin() + input_data_dim);
 		vector<double> tmp_t(e.begin() + input_data_dim, e.end());
@@ -101,17 +90,22 @@ int main(void)
 	// vector<vector<double>> tt(t.begin(), t.begin() + 50);
 	// vector<vector<double>> tl(t.begin() + 50, t.end());
 
-	so::NeuralNetwork nn(neural_num, eta, "regression");
-	{
-		//E履歴出力用ファイル作成
-		std::ofstream ofs("E.csv");
-		if (!ofs)
-			throw std::fstream::failure("Cannot create ");
+	/*-----------------------------------------------
+	*
+	* 学習する
+	*
+	-----------------------------------------------*/
+	// so::NeuralNetwork nn(neural_num, eta, "regression");
+	// std::ofstream ofs_e("E.csv");
+	// if (!ofs_e)
+	// 	throw std::fstream::failure("Cannot create ");
+	// std::ofstream ofs_w("w.csv");
+	// if (!ofs_w)
+	// 	throw std::fstream::failure("Cannot create ");
+	// nn.prelearning(xl, 1E-4, -1, "deltaE");
+	// nn.learning(xl, tl, 1E-4, "deltaE", -1, &ofs_e, &ofs_w); //学習
 
-		// nn.prelearning(xl, 1E-4, -1, "deltaE");
-
-		nn.learning(xl, tl, 1E-4, "deltaE", -1, &ofs); //学習
-	}
+	so::NeuralNetwork nn("regression", "w.csv");
 
 	/*-----------------------------------------------
 	*

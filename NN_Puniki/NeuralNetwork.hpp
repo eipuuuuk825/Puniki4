@@ -11,6 +11,8 @@
 
 namespace so
 {
+	std::vector<double> split(std::string str, char del);
+
 	class NeuralNetwork
 	{
 	private:
@@ -28,6 +30,7 @@ namespace so
 		*
 		-----------------------------------------------*/
 		explicit NeuralNetwork(const vector<size_t> &n_, double eta_, std::string nn_mode_);
+		explicit NeuralNetwork(const std::string nn_mode_, const std::string learned_param_path);
 
 		//学習関数
 		double learning(const vector<vector<double>> &x_v,				//入力ベクトル
@@ -35,7 +38,8 @@ namespace so
 						double epsilon,									//収束判定値
 						const std::string &convergence_mode = "deltaE", //収束条件（ここを変えると収束判定の方法が変わる）
 						int limit = -1,									//打ち切り試行回数
-						std::ostream *os = nullptr);					//エラーEの履歴出力先のポインタ
+						std::ostream *ofs_e_his = nullptr,				//全データの誤差 E の履歴出力先
+						std::ostream *ofs_w = nullptr);					// 学習済みの重みの出力先
 
 		//自己符号化による事前学習
 		void prelearning(const vector<vector<double>> &x_v,
@@ -48,6 +52,9 @@ namespace so
 		void reset();
 
 	private:
+		/* メンバ変数の初期化 */
+		void init();
+
 		//自己符号化器
 		void autoencoder(const vector<vector<double>> &x_v, int l, double epsilon, int limit, const std::string &convergence_mode); //引数は入力ベクトルと何層目で自己符号化器を作るか　番号は1からL-1まで
 

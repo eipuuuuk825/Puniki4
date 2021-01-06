@@ -7,7 +7,7 @@ import numpy as np
 
 # パラメータ
 data_raw_dir = "../data_raw/"
-data_sample_dir = "../data_sample/"
+data_set_dir = "../data_set/"
 yt = 350                # x と t を予測する y 座標
 first_input_num = 0     # 入力する最初の座標
 input_point_num = 6     # 入力データとして使う座標の数
@@ -118,7 +118,7 @@ def main():
     #
     # サンプルデータを書き出す
     #
-    out_file = data_sample_dir + \
+    out_file = data_set_dir + \
         str(datetime.datetime.now()).replace(":", ".")+".csv"
     sep = " "  # 区切る文字
     with open(out_file, "w") as out_fileobj:

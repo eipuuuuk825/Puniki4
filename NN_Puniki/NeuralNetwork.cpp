@@ -10,19 +10,48 @@
 #include <stdexcept>
 #include <string>
 #include <sstream>
+#include <fstream>
 
 namespace
 {
 	//シグモイド関数
 	double sigmoid(double x) { return 1.0 / (1.0 + std::exp(-x)); }
 
-	//エラーEの履歴のファイル出力用関数の定義
 	template <typename Seq>
-	void output_sequence(const Seq &seq, std::ostream *os)
+	void output_sequence(const Seq &seq, std::ostream *ofs)
 	{
-		if (os != nullptr)
+		if (ofs != nullptr)
 			for (auto &&e : seq)
-				*os << e << std::endl;
+				*ofs << e << std::endl;
+	}
+
+	/* TODO : 名前を output_learned_param に変更 */
+	void output_learned_w(std::vector<size_t> &n,
+						  double eta,
+						  std::vector<std::vector<std::vector<double>>> &w,
+						  std::ostream *ofs)
+	{
+		if (ofs == nullptr)
+			return;
+
+		const std::string separator = ",";
+
+		/* n */
+		for (auto &&i : n)
+			*ofs << i << separator;
+		/* eta */
+		*ofs << "\n"
+			 << eta << std::endl;
+		/* w */
+		for (auto &&i : w)
+		{
+			for (auto &&j : i)
+			{
+				for (auto &&k : j)
+					*ofs << k << separator;
+				*ofs << std::endl;
+			}
+		}
 	}
 
 	/* 例外処理用 */
@@ -34,10 +63,76 @@ namespace
 	}
 } // namespace
 
+/* str を del で分割する */
+std::vector<double> so::split(std::string str, char del)
+{
+	int first = 0;
+	int last = str.find_first_of(del);
+	std::vector<double> result;
+
+	while (first < str.size())
+	{
+		std::string sub_str(str, first, last - first);
+
+		result.push_back(std::stod(sub_str));
+
+		first = last + 1;
+		last = str.find_first_of(del, first);
+
+		if (last == std::string::npos)
+			last = str.size();
+	}
+	return result;
+}
+
 //NeuralNetworkのコンストラクタ
 //重み、逆伝播する誤差、各ニューロンの出力の配列を生成
 so::NeuralNetwork::NeuralNetwork(const vector<size_t> &n_, double eta_, std::string nn_mode_)
 	: n(n_), L(n.size()), eta(eta_), nn_mode(nn_mode_)
+{
+	init();
+}
+
+/* 学習済みの重みを使用する */
+so::NeuralNetwork::NeuralNetwork(const std::string nn_mode_, const std::string learned_param_path)
+	: nn_mode(nn_mode_)
+{
+	std::ifstream ifs(learned_param_path);
+	if (!ifs)
+		my_exception(__FNAME__, "cannot open");
+	std::string line;
+
+	/* n */
+	{
+		std::getline(ifs, line);
+		vector<double> splitted = split(line, ' ');
+		n.resize(splitted.size());
+		for (size_t i = 0; i < splitted.size(); ++i)
+			n[i] = (size_t)splitted[i];
+	}
+
+	/* L */
+	L = n.size();
+
+	/* eta */
+	std::getline(ifs, line);
+	eta = std::stod(line);
+
+	/* メンバ変数の初期化 */
+	init();
+
+	/* w */
+	for (auto &&i : w)
+	{
+		for (auto &&j : i)
+		{
+			std::getline(ifs, line);
+			j = split(line, ' ');
+		}
+	}
+}
+
+void so::NeuralNetwork::init()
 {
 	/* nn_mode のエラーチェック */
 	if (nn_mode != MODE_C and nn_mode != MODE_R)
@@ -307,7 +402,8 @@ double so::NeuralNetwork::learning(const vector<vector<double>> &x_v,
 								   double epsilon,
 								   const std::string &convergence_mode,
 								   int limit,
-								   std::ostream *os)
+								   std::ostream *ofs_e_his,
+								   std::ostream *ofs_w)
 {
 
 	vector<double> E_v;
@@ -339,6 +435,7 @@ double so::NeuralNetwork::learning(const vector<vector<double>> &x_v,
 		if (count == limit) //試行回数で打ち切り
 			break;
 	}
-	output_sequence(E_v, os); //エラー履歴をファイルに出力
+	output_sequence(E_v, ofs_e_his);	//エラー履歴をファイルに出力
+	output_learned_w(n, eta, w, ofs_w); /* 学習済みの重みをファイルに出力 */
 	return E_v.back();
 }
