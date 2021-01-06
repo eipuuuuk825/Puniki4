@@ -20,16 +20,11 @@ int main(void)
 	* パラメータ
 	*
 	-----------------------------------------------*/
-	enum
-	{
-		DATA_XT_6 = 12,
-		DATA_XYT_6 = 18,
-		DATA_XYT_12 = 36
-	};
-	size_t input_data_dim = DATA_XYT_6; /* 入力データの次元 */
+	size_t input_data_dim = 18; /* 入力データの次元 */
 	const vector<size_t> neural_num{18, 10, 2};
-	const double eta = 0.1;
 	// const vector<size_t> neural_num{12, 7, 2};
+	// const vector<size_t> neural_num{9, 6, 2};
+	const double eta = 0.1;
 
 	/*-----------------------------------------------
 	*
@@ -48,7 +43,7 @@ int main(void)
 	double tt_std;
 	std::getline(ifs, line);
 	{
-		vector<double> tmp = so::split(line, ' ');
+		vector<double> tmp = so::split(line, ',');
 		xt_mean = tmp[0];
 		xt_std = tmp[1];
 		tt_mean = tmp[2];
@@ -58,7 +53,7 @@ int main(void)
 	/* データセット */
 	vector<vector<double>> data_set;
 	while (std::getline(ifs, line))
-		data_set.emplace_back(so::split(line, ' '));
+		data_set.emplace_back(so::split(line, ','));
 
 	/*-----------------------------------------------
 	*
@@ -92,20 +87,13 @@ int main(void)
 
 	/*-----------------------------------------------
 	*
-	* 学習する
+	* 学習
 	*
 	-----------------------------------------------*/
-	// so::NeuralNetwork nn(neural_num, eta, "regression");
-	// std::ofstream ofs_e("E.csv");
-	// if (!ofs_e)
-	// 	throw std::fstream::failure("Cannot create ");
-	// std::ofstream ofs_w("w.csv");
-	// if (!ofs_w)
-	// 	throw std::fstream::failure("Cannot create ");
-	// nn.prelearning(xl, 1E-4, -1, "deltaE");
-	// nn.learning(xl, tl, 1E-4, "deltaE", -1, &ofs_e, &ofs_w); //学習
+	so::NeuralNetwork nn(neural_num, eta, "regression");
+	nn.learning(xl, tl, "E.csv", "learned_param.csv");
 
-	so::NeuralNetwork nn("regression", "w.csv");
+	// so::NeuralNetwork nn("regression", "learned_param.csv");
 
 	/*-----------------------------------------------
 	*

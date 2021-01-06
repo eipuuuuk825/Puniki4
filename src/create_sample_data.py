@@ -120,7 +120,7 @@ def main():
     #
     out_file = data_set_dir + \
         str(datetime.datetime.now()).replace(":", ".")+".csv"
-    sep = " "  # 区切る文字
+    sep = ","  # 区切る文字
     with open(out_file, "w") as out_fileobj:
         out_fileobj.write(
             str(t_mean[0])+sep+str(t_std[0])+sep+str(t_mean[1])+sep+str(t_std[1])+"\n")

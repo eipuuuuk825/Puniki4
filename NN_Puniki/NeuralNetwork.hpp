@@ -30,16 +30,16 @@ namespace so
 		*
 		-----------------------------------------------*/
 		explicit NeuralNetwork(const vector<size_t> &n_, double eta_, std::string nn_mode_);
-		explicit NeuralNetwork(const std::string nn_mode_, const std::string learned_param_path);
+		explicit NeuralNetwork(const std::string nn_mode_, const std::string path_learned_param);
 
 		//学習関数
-		double learning(const vector<vector<double>> &x_v,				//入力ベクトル
-						const vector<vector<double>> &t_v,				//教師ベクトル
-						double epsilon,									//収束判定値
-						const std::string &convergence_mode = "deltaE", //収束条件（ここを変えると収束判定の方法が変わる）
-						int limit = -1,									//打ち切り試行回数
-						std::ostream *ofs_e_his = nullptr,				//全データの誤差 E の履歴出力先
-						std::ostream *ofs_w = nullptr);					// 学習済みの重みの出力先
+		double learning(const vector<vector<double>> &x_v,				/* 入力ベクトル */
+						const vector<vector<double>> &t_v,				/* 教師ベクトル */
+						const std::string path_E_his = "",				/* 全データの誤差 E の履歴出力先 */
+						const std::string path_learned_param = "",		/*  学習済みのパラメータの出力先 */
+						const std::string &convergence_mode = "deltaE", /* 収束条件（ここを変えると収束判定の方法が変わる） */
+						double epsilon = 1E-4,							/* 収束判定値 */
+						int limit = -1);								/* 打ち切り試行回数 */
 
 		//自己符号化による事前学習
 		void prelearning(const vector<vector<double>> &x_v,

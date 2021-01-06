@@ -6,7 +6,6 @@
 #include <random>
 #include <functional>
 #include <ostream>
-#include <ios>
 #include <stdexcept>
 #include <string>
 #include <sstream>
@@ -14,52 +13,57 @@
 
 namespace
 {
-	//シグモイド関数
-	double sigmoid(double x) { return 1.0 / (1.0 + std::exp(-x)); }
-
-	template <typename Seq>
-	void output_sequence(const Seq &seq, std::ostream *ofs)
-	{
-		if (ofs != nullptr)
-			for (auto &&e : seq)
-				*ofs << e << std::endl;
-	}
-
-	/* TODO : 名前を output_learned_param に変更 */
-	void output_learned_w(std::vector<size_t> &n,
-						  double eta,
-						  std::vector<std::vector<std::vector<double>>> &w,
-						  std::ostream *ofs)
-	{
-		if (ofs == nullptr)
-			return;
-
-		const std::string separator = ",";
-
-		/* n */
-		for (auto &&i : n)
-			*ofs << i << separator;
-		/* eta */
-		*ofs << "\n"
-			 << eta << std::endl;
-		/* w */
-		for (auto &&i : w)
-		{
-			for (auto &&j : i)
-			{
-				for (auto &&k : j)
-					*ofs << k << separator;
-				*ofs << std::endl;
-			}
-		}
-	}
-
 	/* 例外処理用 */
 	void my_exception(const char *func, const std::string msg)
 	{
 		std::stringstream sstr;
 		sstr << "In [" << func << "], " << msg;
 		throw std::runtime_error(sstr.str());
+	}
+
+	//シグモイド関数
+	double sigmoid(double x) { return 1.0 / (1.0 + std::exp(-x)); }
+
+	/* 渡された vector 等をファイルに出力する */
+	template <typename Seq>
+	void output_sequence(const Seq &seq, const std::string path)
+	{
+		std::ofstream ofs(path);
+		if (!ofs)
+			my_exception(__FNAME__, "cannot create [" + path + "]");
+
+		for (auto &&e : seq)
+			ofs << e << std::endl;
+	}
+
+	/* 学習済みのパラメータをファイルに出力 */
+	void output_learned_param(std::vector<size_t> &n,
+							  double eta,
+							  std::vector<std::vector<std::vector<double>>> &w,
+							  const std::string path_learned_param)
+	{
+		std::ofstream ofs(path_learned_param);
+		if (!ofs)
+			my_exception(__FNAME__, "cannot open [" + path_learned_param + "]");
+
+		const char separator = ',';
+
+		/* n */
+		for (auto &&i : n)
+			ofs << i << separator;
+		/* eta */
+		ofs << "\n"
+			<< eta << std::endl;
+		/* w */
+		for (auto &&i : w)
+		{
+			for (auto &&j : i)
+			{
+				for (auto &&k : j)
+					ofs << k << separator;
+				ofs << std::endl;
+			}
+		}
 	}
 } // namespace
 
@@ -94,10 +98,10 @@ so::NeuralNetwork::NeuralNetwork(const vector<size_t> &n_, double eta_, std::str
 }
 
 /* 学習済みの重みを使用する */
-so::NeuralNetwork::NeuralNetwork(const std::string nn_mode_, const std::string learned_param_path)
+so::NeuralNetwork::NeuralNetwork(const std::string nn_mode_, const std::string path_learned_param)
 	: nn_mode(nn_mode_)
 {
-	std::ifstream ifs(learned_param_path);
+	std::ifstream ifs(path_learned_param);
 	if (!ifs)
 		my_exception(__FNAME__, "cannot open");
 	std::string line;
@@ -105,7 +109,7 @@ so::NeuralNetwork::NeuralNetwork(const std::string nn_mode_, const std::string l
 	/* n */
 	{
 		std::getline(ifs, line);
-		vector<double> splitted = split(line, ' ');
+		vector<double> splitted = split(line, ',');
 		n.resize(splitted.size());
 		for (size_t i = 0; i < splitted.size(); ++i)
 			n[i] = (size_t)splitted[i];
@@ -127,7 +131,7 @@ so::NeuralNetwork::NeuralNetwork(const std::string nn_mode_, const std::string l
 		for (auto &&j : i)
 		{
 			std::getline(ifs, line);
-			j = split(line, ' ');
+			j = split(line, ',');
 		}
 	}
 }
@@ -185,6 +189,15 @@ void so::NeuralNetwork::reset()
 
 std::vector<double> so::NeuralNetwork::compute(const vector<double> &x)
 {
+	if (x.size() != n[0])
+	{
+		std::stringstream sstr;
+		sstr << "入力データの次元が不適切です．\n"
+			 << "セットされたパラメータの次元：" << n[0]
+			 << ", 入力されたデータの次元：" << x.size();
+		my_exception(__FNAME__, sstr.str());
+	}
+
 	for (size_t i = 1; i < n[0] + 1; ++i)
 	{
 		z[0][i] = x[i - 1]; //第0層へ入力ベクトルをセット
@@ -399,14 +412,14 @@ double so::NeuralNetwork::error(const vector<double> &t) const
 
 double so::NeuralNetwork::learning(const vector<vector<double>> &x_v,
 								   const vector<vector<double>> &t_v,
-								   double epsilon,
+								   const std::string path_E_his,
+								   const std::string path_learned_param,
 								   const std::string &convergence_mode,
-								   int limit,
-								   std::ostream *ofs_e_his,
-								   std::ostream *ofs_w)
+								   double epsilon,
+								   int limit)
 {
 
-	vector<double> E_v;
+	vector<double> E_his;
 	int count = 0; // 試行回数カウンタ
 	while (true)
 	{
@@ -417,7 +430,7 @@ double so::NeuralNetwork::learning(const vector<vector<double>> &x_v,
 			back_propagation(t_v[p]); //逆誤差伝播計算
 			E += error(t_v[p]);		  //エラーを計算
 		}
-		E_v.push_back(E); //エラー履歴に保存
+		E_his.push_back(E); //エラー履歴に保存
 		++count;
 
 		/* 収束判定 */
@@ -425,7 +438,7 @@ double so::NeuralNetwork::learning(const vector<vector<double>> &x_v,
 		{
 			if (count != 1)
 			{
-				double deltaE = std::abs(E_v[E_v.size() - 1] - E_v[E_v.size() - 2]);
+				double deltaE = std::abs(E_his[E_his.size() - 1] - E_his[E_his.size() - 2]);
 				if (deltaE < epsilon)
 					break;
 			}
@@ -435,7 +448,14 @@ double so::NeuralNetwork::learning(const vector<vector<double>> &x_v,
 		if (count == limit) //試行回数で打ち切り
 			break;
 	}
-	output_sequence(E_v, ofs_e_his);	//エラー履歴をファイルに出力
-	output_learned_w(n, eta, w, ofs_w); /* 学習済みの重みをファイルに出力 */
-	return E_v.back();
+
+	/* エラー履歴をファイルに出力 */
+	if (path_E_his != "")
+		output_sequence(E_his, path_E_his);
+
+	/* 学習済みのパラメータをファイルに出力 */
+	if (path_learned_param != "")
+		output_learned_param(n, eta, w, path_learned_param);
+
+	return E_his.back();
 }
