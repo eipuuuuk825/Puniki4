@@ -30,7 +30,7 @@ namespace
 	{
 		std::ofstream ofs(path);
 		if (!ofs)
-			my_exception(__FNAME__, "cannot create [" + path + "]");
+			my_exception(__FNAME__, "cannot open [" + path + "]");
 
 		for (auto &&e : seq)
 			ofs << e << std::endl;
@@ -103,7 +103,7 @@ so::NeuralNetwork::NeuralNetwork(const std::string nn_mode_, const std::string p
 {
 	std::ifstream ifs(path_learned_param);
 	if (!ifs)
-		my_exception(__FNAME__, "cannot open");
+		my_exception(__FNAME__, "cannot open [" + path_learned_param + "]");
 	std::string line;
 
 	/* n */
@@ -140,7 +140,7 @@ void so::NeuralNetwork::init()
 {
 	/* nn_mode のエラーチェック */
 	if (nn_mode != MODE_C and nn_mode != MODE_R)
-		my_exception(__FNAME__, "invalid nn_mode");
+		my_exception(__FNAME__, "invalid nn_mode [" + nn_mode + "]");
 
 	z.resize(L);
 	for (size_t l = 0; l < L; ++l)
@@ -192,7 +192,8 @@ std::vector<double> so::NeuralNetwork::compute(const vector<double> &x)
 	if (x.size() != n[0])
 	{
 		std::stringstream sstr;
-		sstr << "入力データの次元が不適切です．\n"
+		sstr << "NeuralNetwork::compute\n"
+			 << "入力データの次元が不適切です．\n"
 			 << "セットされたパラメータの次元：" << n[0]
 			 << ", 入力されたデータの次元：" << x.size();
 		my_exception(__FNAME__, sstr.str());

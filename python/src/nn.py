@@ -48,9 +48,10 @@ def main():
     #
     # NN
     #
-    nn = so.NeuralNetwork([18, 10, 2], 0.1, "regression")
-    nn.learning(data_training_x, data_training_t, "E.csv", "param.csv")
-    # nn = so.NeuralNetwork("regression", "param.csv")
+    # nn = so.NeuralNetwork([18, 10, 2], 0.1, "regression")
+    # nn.learning(data_training_x, data_training_t, "data/E.csv", "data/param.csv")
+    nn = so.NeuralNetwork("regression", "param.csv")
+    nn.compute([float(i) for i in range(10)])
 
     # 精度を検証
     predict_x = []
@@ -72,7 +73,7 @@ def main():
     print(coef_x, coef_t)
 
     # ファイルに出力
-    with open("result.csv", "w") as fileobj:
+    with open("data/result.csv", "w") as fileobj:
         fileobj.write("true x, predict x, true t, predict t\n")
         for i in result:
             output_str = str(i[0])+","

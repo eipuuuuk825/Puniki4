@@ -2,7 +2,7 @@
 /* 7763c160b4ec1caa99718cd3c865339227a1908e */
 
 #include <pybind11/pybind11.h>
-#include <pybind11/stl.h>		// vector用
+#include <pybind11/stl.h> // vector用
 
 #include "NeuralNetwork.hpp"
 #include <array>
@@ -20,9 +20,12 @@
 /* 例外処理用 */
 void my_exception(const char *func, const std::string msg)
 {
-	std::stringstream sstr;
-	sstr << "In [" << func << "], " << msg;
-	throw std::runtime_error(sstr.str());
+	//std::stringstream sstr;
+	//sstr << "In [" << func << "], " << msg;
+	//throw std::runtime_error(sstr.str());
+	std::cout << "*** Error ***\n"
+			  << msg << std::endl;
+	exit(1);
 }
 
 //シグモイド関数
@@ -34,7 +37,7 @@ void output_sequence(const Seq &seq, const std::string path)
 {
 	std::ofstream ofs(path);
 	if (!ofs)
-		my_exception(__FNAME__, "cannot create [" + path + "]");
+		my_exception(__FNAME__, "cannot open [" + path + "]");
 
 	for (auto &&e : seq)
 		ofs << e << std::endl;
@@ -106,7 +109,7 @@ NeuralNetwork::NeuralNetwork(const std::string nn_mode_, const std::string path_
 {
 	std::ifstream ifs(path_learned_param);
 	if (!ifs)
-		my_exception(__FNAME__, "cannot open");
+		my_exception(__FNAME__, "cannot open [" + path_learned_param + "]");
 	std::string line;
 
 	/* n */
@@ -143,7 +146,7 @@ void NeuralNetwork::init()
 {
 	/* nn_mode のエラーチェック */
 	if (nn_mode != MODE_C and nn_mode != MODE_R)
-		my_exception(__FNAME__, "invalid nn_mode");
+		my_exception(__FNAME__, "invalid nn_mode [" + nn_mode + "]");
 
 	z.resize(L);
 	for (size_t l = 0; l < L; ++l)
@@ -195,7 +198,8 @@ std::vector<double> NeuralNetwork::compute(const vector<double> &x)
 	if (x.size() != n[0])
 	{
 		std::stringstream sstr;
-		sstr << "入力データの次元が不適切です．\n"
+		sstr << "NeuralNetwork::compute\n"
+			 << "入力データの次元が不適切です．\n"
 			 << "セットされたパラメータの次元：" << n[0]
 			 << ", 入力されたデータの次元：" << x.size();
 		my_exception(__FNAME__, sstr.str());
@@ -263,7 +267,7 @@ void NeuralNetwork::autoencoder(const vector<vector<double>> &x_v, int l, double
 {
 	/* nn_mode のエラーチェック */
 	if (nn_mode == MODE_R)
-		my_exception(__FNAME__, "回帰モードでの動作は未確認です");
+		my_exception(__FNAME__, "NeuralNetwork::autoencoder\n回帰モードでの動作は未確認です");
 
 	//自己符号化器を作成する
 	//第l-1層と第l層を訓練する
@@ -348,7 +352,7 @@ std::vector<double> NeuralNetwork::compute_lth_layer_output(const vector<double>
 {
 	/* nn_mode のエラーチェック */
 	if (nn_mode == MODE_R)
-		my_exception(__FNAME__, "回帰モードでの動作は未確認です");
+		my_exception(__FNAME__, "NeuralNetwork::compute_lth_layer_output\n回帰モードでの動作は未確認です");
 
 	for (size_t i = 1; i < n[0] + 1; ++i)
 	{
@@ -375,7 +379,7 @@ void NeuralNetwork::prelearning(const vector<vector<double>> &x_v, double epsilo
 {
 	/* nn_mode のエラーチェック */
 	if (nn_mode == MODE_R)
-		my_exception(__FNAME__, "回帰モードでの事前学習の動作は未確認です");
+		my_exception(__FNAME__, "NeuralNetwork::prelearning\n回帰モードでの事前学習の動作は未確認です");
 
 	int p = x_v.size();
 	vector<vector<double>> output;
