@@ -1,9 +1,5 @@
-//References:
-//http://pybind11.readthedocs.io/en/stable/classes.html
-//https://qiita.com/ignis_fatuus/items/c7523c0fe2bc2f415d50
-//https://qiita.com/exy81/items/e309df7e33d4ff20a91a#_reference-c8a52580111447fade09
-//http://pybind11.readthedocs.io/en/stable/advanced/classes.html#operator-overloading
-//http://pybind11.readthedocs.io/en/stable/classes.html#overloaded-methods
+/* NN ライブラリを使いやすいように変更 */
+/* 7763c160b4ec1caa99718cd3c865339227a1908e */
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>		// vector用

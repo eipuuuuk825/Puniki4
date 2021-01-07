@@ -256,7 +256,7 @@ void so::NeuralNetwork::back_propagation(const vector<double> &t)
 	}
 }
 
-void so::NeuralNetwork::autoencoder(const vector<vector<double>> &x_v, int l, double epsilon, int limit, const std::string &convergence_mode)
+void so::NeuralNetwork::autoencoder(const vector<vector<double>> &x_v, int l, double epsilon, int limit, const std::string convergence_mode)
 {
 	/* nn_mode のエラーチェック */
 	if (nn_mode == MODE_R)
@@ -368,7 +368,7 @@ std::vector<double> so::NeuralNetwork::compute_lth_layer_output(const vector<dou
 	return std::move(output);
 }
 
-void so::NeuralNetwork::prelearning(const vector<vector<double>> &x_v, double epsilon, int limit, const std::string &convergence_mode)
+void so::NeuralNetwork::prelearning(const vector<vector<double>> &x_v, double epsilon, int limit, const std::string convergence_mode)
 {
 	/* nn_mode のエラーチェック */
 	if (nn_mode == MODE_R)
@@ -414,7 +414,7 @@ double so::NeuralNetwork::learning(const vector<vector<double>> &x_v,
 								   const vector<vector<double>> &t_v,
 								   const std::string path_E_his,
 								   const std::string path_learned_param,
-								   const std::string &convergence_mode,
+								   const std::string convergence_mode,
 								   double epsilon,
 								   int limit)
 {

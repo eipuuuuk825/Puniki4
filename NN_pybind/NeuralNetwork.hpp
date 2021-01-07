@@ -1,3 +1,6 @@
+/* NN ライブラリを使いやすいように変更 */
+/* 7763c160b4ec1caa99718cd3c865339227a1908e */
+
 #ifdef __GNUC__ /* GCC */
 #define __FNAME__ __PRETTY_FUNCTION__
 #elif _MSC_VER /* Visual C++ */

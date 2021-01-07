@@ -37,7 +37,7 @@ namespace so
 						const vector<vector<double>> &t_v,				/* 教師ベクトル */
 						const std::string path_E_his = "",				/* 全データの誤差 E の履歴出力先 */
 						const std::string path_learned_param = "",		/*  学習済みのパラメータの出力先 */
-						const std::string &convergence_mode = "deltaE", /* 収束条件（ここを変えると収束判定の方法が変わる） */
+						const std::string convergence_mode = "deltaE", /* 収束条件（ここを変えると収束判定の方法が変わる） */
 						double epsilon = 1E-4,							/* 収束判定値 */
 						int limit = -1);								/* 打ち切り試行回数 */
 
@@ -45,7 +45,7 @@ namespace so
 		void prelearning(const vector<vector<double>> &x_v,
 						 double epsilon,
 						 int limit = -1,
-						 const std::string &convergence_mode = "deltaE");
+						 const std::string convergence_mode = "deltaE");
 
 		//順方向計算
 		vector<double> compute(const vector<double> &x); //入力ベクトル
@@ -56,7 +56,7 @@ namespace so
 		void init();
 
 		//自己符号化器
-		void autoencoder(const vector<vector<double>> &x_v, int l, double epsilon, int limit, const std::string &convergence_mode); //引数は入力ベクトルと何層目で自己符号化器を作るか　番号は1からL-1まで
+		void autoencoder(const vector<vector<double>> &x_v, int l, double epsilon, int limit, const std::string convergence_mode); //引数は入力ベクトルと何層目で自己符号化器を作るか　番号は1からL-1まで
 
 		//第l層までの順方向計算
 		vector<double> compute_lth_layer_output(const vector<double> &x, int l);
