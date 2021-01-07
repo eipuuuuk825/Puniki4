@@ -1,0 +1,1 @@
+C:\Users\jibik\source\repos\NN_pybind\x64\Release\so.pyd
