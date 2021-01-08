@@ -11,6 +11,12 @@ def ball_main(pos):
     return (xd, yd)
 
 
+def puniki_main(pos):
+    xd = pos[0] + pa.RECT_PUNIKI[0] - pa.RECT_MAIN[0]
+    yd = pos[1] + pa.RECT_PUNIKI[1] - pa.RECT_MAIN[1]
+    return (xd, yd)
+
+
 def main_cap(pos):
     xd = pos[0] + pa.RECT_MAIN[0]
     yd = pos[1] + pa.RECT_MAIN[1]

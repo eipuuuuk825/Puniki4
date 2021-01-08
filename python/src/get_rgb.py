@@ -22,5 +22,5 @@ while True:
     if pos[0] >= pa.CAP_WIDTH or pos[1] >= pa.CAP_HEIGHT:
         continue
 
-    img_cap, img_main, img_bin = cap.prepare_img(capture)    # 画像を用意
+    img_cap, img_main, im_b_ball, im_b_pu = cap.prepare_img(capture)  # 画像を用意
     print(main_pos, img_cap[pos[1]][pos[0]])
