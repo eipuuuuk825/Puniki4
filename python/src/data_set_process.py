@@ -9,7 +9,7 @@ import utility
 # パラメータ
 path_raw_data_input = "../../data_raw/2021-01-08/"
 path_data_set_output = "data/data_set.csv"
-first_input_num = 6     # 入力する最初の座標
+first_input_num = 0     # 入力する最初の座標
 input_point_num = 12     # 入力データとして使う座標の数
 input_point_step = 1    # 入力する座標の間隔
 max_point_num = 20      # 入力として使える座標の最大個数
