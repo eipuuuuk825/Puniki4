@@ -4,38 +4,46 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import so
+import utility
 
-# 入力された文字列が数値を表すかを判定
+#
+# パラメータ
+#
+path_data_set = "data/data_set.csv"
+path_E_output = "data/E.csv"
+path_result_output = "data/result.csv"
+path_param_output = "data/param.csv"
 
+# neuron_num = [18, 10, 2]
+neuron_num = [36, 24, 13, 2]
+# neuron_num = [54, 35, 19, 2]
 
-def is_num(s):
-    try:
-        float(s)
-    except ValueError:
-        return False
-    else:
-        return True
+eta = 0.1
 
 
 def main():
     #
     # ファイルからデータセットを読み込む
     #
-    with open("../../data_set/1.csv") as fileobj:
+    with open(path_data_set) as fileobj:
+        # yt
+        fileobj.readline()
+        yt = fileobj.readline().split(",")[0]
         # 平均，標準偏差
-        line_list = [float(val) for val in fileobj.readline().split(",")]
-        xt_mean = line_list[0]
-        xt_std = line_list[1]
-        tt_mean = line_list[2]
-        tt_std = line_list[3]
-
+        fileobj.readline()
+        mean = [float(val) for val in fileobj.readline().split(
+            ",") if utility.is_num(val)]
+        fileobj.readline()
+        std = [float(val) for val in fileobj.readline().split(
+            ",") if utility.is_num(val)]
         # x, y, t
         data_set = []
+        fileobj.readline()
         while True:  # 末尾まで
             line = fileobj.readline()
             if line:
                 line_list = [float(val)
-                             for val in line.split(",") if is_num(val)]
+                             for val in line.split(",") if utility.is_num(val)]
                 data_set.append(line_list)
             else:
                 break
@@ -43,17 +51,17 @@ def main():
     #
     # NN に渡すデータを用意
     #
-    data_training_x = np.array(data_set)[:50, :-2]
-    data_training_t = np.array(data_set)[:50, -2:]
-    data_test_x = np.array(data_set)[50:, :-2]
-    data_test_t = np.array(data_set)[50:, -2:]
+    data_training_x = np.array(data_set)[0:50, :-2]
+    data_training_t = np.array(data_set)[0:50, -2:]
+    data_test_x = np.array(data_set)[50:100, :-2]
+    data_test_t = np.array(data_set)[50:100, -2:]
 
     #
     # NN
     #
-    nn = so.NeuralNetwork([18, 10, 2], 0.1, "regression")
+    nn = so.NeuralNetwork(neuron_num, eta, "regression")
     nn.learning(data_training_x, data_training_t,
-                "data/E.csv", "data/param.csv")
+                path_E_output, path_param_output)
     # nn = so.NeuralNetwork("regression", "param.csv")
 
     # 精度を検証
@@ -76,7 +84,7 @@ def main():
     # print(coef_x, coef_t)
 
     # ファイルに出力
-    with open("data/result.csv", "w") as fileobj:
+    with open(path_result_output, "w") as fileobj:
         fileobj.write("true x, predict x, true t, predict t,,")
         fileobj.write("coef x,"+str(coef_x)+",coef t,"+str(coef_t)+"\n")
         for i in result:
@@ -96,7 +104,7 @@ def main():
     g_x = fig.add_subplot(1, 2, 1)
     plt.scatter(result[:, 0:1], result[:, 1:2])
     plt.plot([xy_min, xy_max], [xy_min, xy_max], color="orange")
-    plt.title("predict x ("+f'{coef_x:.3f}'+")")
+    plt.title("x ("+f'{coef_x:.3f}'+")")
     plt.xlabel("true x [px]")
     plt.ylabel("predict x [px]")
     plt.grid(True)
@@ -106,7 +114,7 @@ def main():
     g_t = fig.add_subplot(1, 2, 2)
     plt.scatter(result[:, 2:3], result[:, 3:4])
     plt.plot([xy_min, xy_max], [xy_min, xy_max], color="orange")
-    plt.title("predict t ("+f'{coef_t:.3f}'+")")
+    plt.title("t ("+f'{coef_t:.3f}'+")")
     plt.xlabel("true t [sec]")
     plt.ylabel("predict t [sec]")
     plt.grid(True)

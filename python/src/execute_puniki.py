@@ -4,6 +4,9 @@ import param as pa
 import judge
 import plot
 import capture as cap
+import utility
+import so   # NN
+# 自分のじゃないの
 import cv2
 import numpy as np
 import time
@@ -14,9 +17,38 @@ import datetime  # 現在時刻取得
 from ctypes import *
 user32 = windll.user32
 
-path_data_output = "../../data_raw/2021-01-08/"
+
+# ボールのデータを正規化して NN に渡せるようにする
+def normalize(ball_data, mean, std):
+    input_array = np.array(ball_data)
+    normalize_data = input_array[:, 0:1].T
+    normalize_data = np.append(normalize_data, input_array[:, 1:2].T, axis=1)
+    normalize_data = np.append(normalize_data, input_array[:, 2:3].T, axis=1)
+    mean_data = np.array(mean)[:-2].reshape(1, 18)
+    std_data = np.array(std)[:-2].reshape(1, 18)
+    return ((normalize_data - mean_data) / std_data).ravel().tolist()
+
+
+#
+# 正規化前の値に戻す
+#
+def unnormalize(predict, mean, std):
+    predict[0] = predict[0]*std[-2]+mean[-2]
+    predict[1] = predict[1]*std[-1]+mean[-1]
+    return predict
+
 
 def main():
+    #
+    # NN の初期化
+    #
+    nn = so.NeuralNetwork("regression", "./data/iikanji_param.csv")
+    with open("../../data_set/1.csv") as fileobj:
+        mean = [float(val) for val in fileobj.readline().split(
+            ",") if utility.is_num(val)]
+        std = [float(val) for val in fileobj.readline().split(
+            ",") if utility.is_num(val)]
+
     # グラフ
     g_f = plot.PlotGraph('program frequency',
                          u'動作周波数 [Hz]',
@@ -34,7 +66,9 @@ def main():
     time_s = time.time()        # 処理時間
     time_sum = 0                # 終了処理関係
     time_throw = 0              # ボールが投げられてから経過した時間
+    # swing = Swing()             # スイング管理
     ball = Ball()               # ボール管理
+    predict_pos = (0, 0)        # 予測位置
 
     # フラグ
     start_flag = False          # 最初のジャッジが行われるまで開始しない
@@ -52,7 +86,6 @@ def main():
         # 画像を用意
         img_cap, img_main, img_bin = cap.prepare_img(capture)
 
-        # swing.process(ball)               # スイング処理
         judge_pre = judge_curr              # judge を更新
         judge_curr = judge.judge(img_main)  # 球のジャッジ
 
@@ -73,12 +106,13 @@ def main():
             continue
 
         # detect_flag の管理
-        if judge_pre != "None" and judge_curr == "None":
+        if judge_pre != "None" and judge_curr == "None":    # スタンバイOK
             detect_flag = 1
-        if detect_flag == 1 and ball.tmp_pos[1] != (0, 0):
+            predict_pos = (0, 0)
+        if detect_flag == 1 and ball.tmp_pos[1] != (0, 0):  # 検出中
             detect_flag = 2
-        if detect_flag == 2 and ball.tmp_pos[1] == (0, 0):
-            ball.output()
+        if detect_flag == 2 and ball.tmp_pos[1] == (0, 0):  # 検出終了
+            # ball.output()
             ball.clear()
             detect_flag = 0
 
@@ -88,8 +122,14 @@ def main():
 
         # ボール位置を保存
         if detect_flag == 2:
-            g_ball.append(ball.tmp_pos[1][1])
+            g_ball.append(ball.tmp_pos[1][1])   # グラフに描画
             ball.append(time.time() - time_throw)
+            # NN で予測
+            if len(ball.data) == 6:
+                input_data = normalize(ball.data, mean, std)
+                predict = nn.compute(input_data)
+                print(unnormalize(predict, mean, std))
+                predict_pos = (int(predict[0]), pa.YT)
 
         #
         # ウィンドウ関連
@@ -113,6 +153,8 @@ def main():
                       pa.WHITE, thickness=2)
         # 検出したボールを表示
         cv2.circle(img_main, ball.tmp_pos[1], 1, pa.RED, 5)
+        # 予測したボール位置を表示
+        cv2.circle(img_main, predict_pos, 1, pa.GREEN, 5)
 
         # ウィンドウ表示
         cv2.imshow('win', img_main)
@@ -126,6 +168,39 @@ def main():
     cv2.destroyAllWindows()
     if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
         QtGui.QApplication.instance().exec_()
+
+
+#
+# スイング
+#
+class Swing:
+    def __init__(self):
+        self.base_time = time.time()    # 基準にする時間
+        self.wait_time = 0              # スイングするまで待機する時間
+        self.is_clicking = False        # 左クリック中かどうか
+
+    def process(self, ball):
+        # スイングのタイミングを予約
+        if self.is_clicking == False:
+            if ball.len() > 0:
+                if ball.pos[-1][1] > pa.POS_SPEED_MEASUREMENT_EDGE_Y:
+                    if pa.TH_SWING_BALL_SPEED[0] <= ball.speed <= pa.TH_SWING_BALL_SPEED[1]:
+                        self.wait_time = 1E-5
+                        self.swing_pos = (ball.pos[-1][0], pa.POS_SWING_Y)
+                        self.base_time = time.time()
+        # クリック（DOWN）
+        if self.wait_time != 0:
+            if self.is_clicking == False:
+                # if time.time() - self.base_time > self.wait_time:
+                user32.mouse_event(pa.LEFT_DOWN, 0, 0, 0, 0)
+                self.is_clicking = True
+                self.base_time = time.time()
+                self.wait_time = 0
+        # クリック（UP）
+        if self.is_clicking == True:
+            if time.time() - self.base_time > pa.TIME_CLICKING:
+                user32.mouse_event(pa.LEFT_UP, 0, 0, 0, 0)
+                self.is_clicking = False
 
 
 #
@@ -165,12 +240,10 @@ class Ball:
     def output(self):
         filename = str(datetime.datetime.now()).replace(":", ".")
         print(filename)
-        file = path_data_output + filename + ".csv"
+        file = "./data/" + filename + ".csv"
         with open(file, "w") as fileobj:
             for i in self.data:
-                for j in i:
-                    fileobj.write(str(j)+",")
-                fileobj.write("\n")
+                fileobj.write(str(i[0])+", "+str(i[1])+", "+str(i[2])+"\n")
 
 
 if __name__ == '__main__':

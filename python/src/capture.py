@@ -33,5 +33,6 @@ def prepare_img(capture):
     img_hsv = cv2.cvtColor(img_ball, cv2.COLOR_BGR2HSV)
     # 二値化
     img_bin = cv2.inRange(img_hsv, np.array(
-        [0, 0, 200]), np.array([255, 15, 255]))
+        [0, 0, 200]), np.array([255, 10, 255]))
+    # (h_min, s_min, v_min), (h_max, s_max, v_max)
     return img_cap, img_main, img_bin

@@ -11,7 +11,7 @@ SECOND_WINDOW_OFFSET = (128, -768)
 # cap に対する切り抜き領域（x, y, width, height）
 #
 RECT_MAIN = (237, 24, 806, 604)
-RECT_BALL = (450, 141, 417, 301)
+RECT_BALL = (450, 141, 417, 370)
 
 # main 座標系における RECT_BALL
 RECT_BALL_IN_MAIN = (RECT_BALL[0]-RECT_MAIN[0],
@@ -39,3 +39,4 @@ LEFT_UP = 4
 RED = (0, 0, 255)
 WHITE = (255, 255, 255)
 BLUE = (255, 0, 0)
+GREEN = (0, 255, 0)

@@ -31,6 +31,8 @@ int main(void)
 	* データセットを読み込む
 	*
 	-----------------------------------------------*/
+	/* データセットのフォーマットが変更されているため，
+	このプログラムも変更が必要 */
 	std::ifstream ifs("../data_set/1.csv");
 	if (!ifs)
 		throw std::fstream::failure("Cannot open");
