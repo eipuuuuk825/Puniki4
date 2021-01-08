@@ -22,10 +22,14 @@ user32 = windll.user32
 #
 # パラメータ
 #
-path_learned_param = "data/iikanji_param.csv"
+path_learned_param = "data/param.csv"
 path_data_set = "data/data_set.csv"     # 平均，標準偏差を利用する
 path_raw_data_output = "data/"          # 検出したボールのデータの出力先
 is_output_raw_data = False              # 検出したボールのデータを出力するか
+time_clicking = 1                       # 左クリックを保持する時間
+home_pos_x = 380                        # main 座標系におけるホームポジションのカーソル位置
+offset_swing_time = -0.25               # スイングするタイミングのオフセット
+offset_pos_tip = -15                    # バットの先端位置のオフセット
 
 
 #
@@ -84,13 +88,15 @@ def main():
     #
     # 初期化処理
     #
-    capture = cap.init_camera()  # カメラ初期設定
-    time_s = time.time()        # 処理時間
-    time_sum = 0                # 終了処理関係
-    time_throw = time.time()    # ボールが投げられてから経過した時間
-    puniki = Puniki()             # プニキ（移動，スイング）
-    ball = Ball()               # ボール管理
-    predict = (0, 0, 0)        # 予測（xt, yt, tt）
+    capture = cap.init_camera()         # カメラ初期設定
+    time_s = time.time()                # 処理時間
+    time_sum = 0                        # 終了処理関係
+    time_throw = time.time()            # ボールが投げられてから経過した時間
+    time_judge_change = time.time()     # judge が変化してからの経過時間
+    puniki = Puniki()                   # プニキ（移動，スイング）
+    ball = Ball()                       # ボール管理
+    predict = (0, 0, 0)                 # 予測（xt, yt, tt）
+    home_pos_main = (int(home_pos_x), int(yt))    # ホームポジション
 
     # フラグ
     start_flag = False          # 最初のジャッジが行われるまで開始しない
@@ -98,7 +104,7 @@ def main():
     judge_pre = "None"
     judge_curr = "None"
 
-    # while(time_sum < 5):
+    # while(time_sum < 100):
     while(True):
         # キー入力
         hit_key = cv2.waitKey(1) & 0xFF
@@ -130,16 +136,20 @@ def main():
 
         # detect_flag の管理
         if judge_pre != "None" and judge_curr == "None":    # スタンバイOK
-            detect_flag = 1
+            detect_flag = 0.5
             predict = (0, 0, 0)  # 予測をリセット
-        if detect_flag == 1 and ball.tmp_pos[1] != (0, 0):  # 検出中
+            time_judge_change = time.time()
+            puniki.has_swung = False
+        if detect_flag == 0.5 and time.time() - time_judge_change > 0.5:
+            detect_flag = 1
+        if detect_flag == 1 and ball.tmp_pos[1] != (0, 0):  # 検出開始
             detect_flag = 2
             time_throw = time.time()  # ボールが投げられてからの時間を計測
         if detect_flag == 2 and ball.tmp_pos[1] == (0, 0):  # 検出終了
             detect_flag = 0
             # ball.output()
             ball.clear()
-            utility.set_cursor(pa.HOME_POS_MAIN)    # カーソルをホームポジションに戻す
+            utility.set_cursor(home_pos_main)    # カーソルをホームポジションに戻す
 
         # ボール位置を保存
         if detect_flag == 2:
@@ -158,9 +168,13 @@ def main():
         puniki.get_pos(img_bin_pu)  # 位置を求める
         if detect_flag != 0:
             if predict == (0, 0, 0):
-                utility.set_cursor(pa.HOME_POS_MAIN)
+                if home_pos_main[1] > puniki.pos_tip[1] + 10 and home_pos_main[1] > puniki.pos_tip[1]:
+                    utility.set_cursor((home_pos_main[0], pa.RECT_MAIN[3] - 10))
+                else:
+                    utility.set_cursor(home_pos_main)
             else:
                 puniki.set_pos((predict[0], predict[1]))
+        puniki.swing(predict, time_throw)  # スイングする
 
         #
         # ウィンドウ関連
@@ -173,13 +187,15 @@ def main():
         g_f.append(freq)   # 描画用にデータを追加
 
         # ウィンドウに文字列表示
-        cv2.rectangle(img_main, (5, 5), (230, 120), pa.WHITE, thickness=-1)
-        cv2.putText(img_main, judge_curr, (15, 30), cv2.FONT_HERSHEY_SIMPLEX,
-                    0.8, pa.RED, 2)
-        cv2.putText(img_main, f'{time.time() - time_throw:.3f} [sec]', (15, 60), cv2.FONT_HERSHEY_SIMPLEX,
-                    0.8, pa.RED, 2)
-        cv2.putText(img_main, "detect flag : "+str(detect_flag), (15, 90),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.8, pa.RED, 2)
+        offset_str_pos_y = 180
+        cv2.rectangle(img_main, (5, offset_str_pos_y), (130, offset_str_pos_y+60),
+                      pa.WHITE, thickness=-1)
+        cv2.putText(img_main, judge_curr,
+                    (15, offset_str_pos_y+15), cv2.FONT_HERSHEY_SIMPLEX, 0.4, pa.RED, 1)
+        cv2.putText(img_main, f'{time.time() - time_throw:.3f} [sec]',
+                    (15, offset_str_pos_y+30), cv2.FONT_HERSHEY_SIMPLEX, 0.4, pa.RED, 1)
+        cv2.putText(img_main, "detect flag : "+str(detect_flag),
+                    (15, offset_str_pos_y + 45), cv2.FONT_HERSHEY_SIMPLEX, 0.4, pa.RED, 1)
 
         # ボールの検出領域
         cv2.rectangle(img_main,
@@ -227,11 +243,11 @@ def main():
 #
 class Puniki:
     def __init__(self):
-        # self.base_time = time.time()    # 基準にする時間
-        # self.wait_time = 0              # スイングするまで待機する時間
-        # self.is_clicking = False        # 左クリック中かどうか
         self.pos_puniki = (0, 0)
         self.pos_tip = (0, 0)
+        self.is_swinging = False            # スイング中かどうか
+        self.has_swung = False
+        self.time_swing_start = time.time()  # スイング開始時間
 
     # プニキとバット先端の位置を求める
     def get_pos(self, img_bin):
@@ -240,9 +256,9 @@ class Puniki:
         if flag:
             self.pos_puniki = tr.puniki_main(pos)
         # バット先端
-        dx = 0.472*self.pos_puniki[1]+49.0
-        dy = 10
-        self.pos_tip = (self.pos_puniki[0] + int(dx), self.pos_puniki[1] + dy)
+        x = self.pos_puniki[0]+0.472*self.pos_puniki[1]+49.0+offset_pos_tip
+        y = self.pos_puniki[1] + 10
+        self.pos_tip = (int(x), int(y))
 
     # バット先端を目標位置に合わせる
     def set_pos(self, tip_tgt_pos):
@@ -262,31 +278,22 @@ class Puniki:
             cursor_pos = pos_ru
         else:
             cursor_pos = pos_rd
-
         utility.set_cursor(cursor_pos)
 
-    # def process(self, ball):
-    #     # スイングのタイミングを予約
-    #     if self.is_clicking == False:
-    #         if ball.len() > 0:
-    #             if ball.pos[-1][1] > pa.POS_SPEED_MEASUREMENT_EDGE_Y:
-    #                 if pa.TH_SWING_BALL_SPEED[0] <= ball.speed <= pa.TH_SWING_BALL_SPEED[1]:
-    #                     self.wait_time = 1E-5
-    #                     self.swing_pos = (ball.pos[-1][0], pa.POS_SWING_Y)
-    #                     self.base_time = time.time()
-    #     # クリック（DOWN）
-    #     if self.wait_time != 0:
-    #         if self.is_clicking == False:
-    #             # if time.time() - self.base_time > self.wait_time:
-    #             user32.mouse_event(pa.LEFT_DOWN, 0, 0, 0, 0)
-    #             self.is_clicking = True
-    #             self.base_time = time.time()
-    #             self.wait_time = 0
-    #     # クリック（UP）
-    #     if self.is_clicking == True:
-    #         if time.time() - self.base_time > pa.TIME_CLICKING:
-    #             user32.mouse_event(pa.LEFT_UP, 0, 0, 0, 0)
-    #             self.is_clicking = False
+    # スイングする
+    def swing(self, predict, time_throw):
+        if self.is_swinging:
+            if time.time() - self.time_swing_start > 1:
+                user32.mouse_event(pa.LEFT_UP, 0, 0, 0, 0)
+                self.is_swinging = False
+        else:
+            if predict == (0, 0, 0) or self.has_swung:
+                return
+            if time.time() - time_throw >= predict[2] + offset_swing_time:
+                user32.mouse_event(pa.LEFT_DOWN, 0, 0, 0, 0)
+                self.time_swing_start = time.time()
+                self.is_swinging = True
+                self.has_swung = True
 
 
 #

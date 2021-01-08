@@ -27,21 +27,10 @@ RECT_PUNIKI_IN_MAIN = (RECT_PUNIKI[0]-RECT_MAIN[0],
                        RECT_PUNIKI[3])
 
 #
-# パラメータ
-#
-POS_SWING_Y = 420                   # スイング位置の y 座標（main）
-POS_SPEED_MEASUREMENT_EDGE_Y = 250  # 320  # 球速測定領域下端 y 座標（main）
-TH_SWING_BALL_SPEED = (30, 500)    # スイングする球速の閾値（最低，最高）
-TIME_CLICKING = 1                   # 左クリックを保持する時間
-HOME_POS_MAIN = (365, 450)          # main 座標系におけるホームポジションのカーソル位置
-
-#
 # mouse_event
 #
 LEFT_DOWN = 2
 LEFT_UP = 4
-MOVE = 1
-ABSOLUTE = 0x8000
 
 #
 # 色
