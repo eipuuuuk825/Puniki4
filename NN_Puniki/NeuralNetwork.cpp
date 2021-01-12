@@ -89,9 +89,8 @@ std::vector<double> so::split(std::string str, char del)
 	return result;
 }
 
-//NeuralNetworkのコンストラクタ
-//重み、逆伝播する誤差、各ニューロンの出力の配列を生成
-so::NeuralNetwork::NeuralNetwork(const vector<size_t> &n_, double eta_, std::string nn_mode_)
+/* 重み、逆伝播する誤差、各ニューロンの出力の配列を生成 */
+so::NeuralNetwork::NeuralNetwork(const vector<size_t> &n_, double eta_, const std::string nn_mode_)
 	: n(n_), L(n.size()), eta(eta_), nn_mode(nn_mode_)
 {
 	init();
@@ -107,13 +106,11 @@ so::NeuralNetwork::NeuralNetwork(const std::string nn_mode_, const std::string p
 	std::string line;
 
 	/* n */
-	{
-		std::getline(ifs, line);
-		vector<double> splitted = split(line, ',');
-		n.resize(splitted.size());
-		for (size_t i = 0; i < splitted.size(); ++i)
-			n[i] = (size_t)splitted[i];
-	}
+	std::getline(ifs, line);
+	vector<double> splitted = split(line, ',');
+	n.resize(splitted.size());
+	for (size_t i = 0; i < splitted.size(); ++i)
+		n[i] = (size_t)splitted[i];
 
 	/* L */
 	L = n.size();

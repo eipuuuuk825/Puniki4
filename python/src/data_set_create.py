@@ -14,7 +14,8 @@ import datetime  # 現在時刻取得
 from ctypes import *
 user32 = windll.user32
 
-path_data_output = "../../data_raw/2021-01-08/"
+path_data_output = "../../data_raw/stage4_2021-01-09/"
+
 
 def main():
     # グラフ
@@ -50,7 +51,7 @@ def main():
             break
 
         # 画像を用意
-        img_cap, img_main, img_bin = cap.prepare_img(capture)
+        img_cap, img_main, img_bin, img_tmp = cap.prepare_img(capture)
 
         # swing.process(ball)               # スイング処理
         judge_pre = judge_curr              # judge を更新

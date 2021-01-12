@@ -29,17 +29,20 @@ namespace so
 		* nn_mode：classification もしくは regression を指定
 		*
 		-----------------------------------------------*/
-		explicit NeuralNetwork(const vector<size_t> &n_, double eta_, std::string nn_mode_);
-		explicit NeuralNetwork(const std::string nn_mode_, const std::string path_learned_param);
+		explicit NeuralNetwork(const vector<size_t> &n_,
+							   double eta_,
+							   const std::string nn_mode_);
+		explicit NeuralNetwork(const std::string nn_mode_,
+							   const std::string path_learned_param);
 
 		//学習関数
-		double learning(const vector<vector<double>> &x_v,				/* 入力ベクトル */
-						const vector<vector<double>> &t_v,				/* 教師ベクトル */
-						const std::string path_E_his = "",				/* 全データの誤差 E の履歴出力先 */
-						const std::string path_learned_param = "",		/*  学習済みのパラメータの出力先 */
+		double learning(const vector<vector<double>> &x_v,			   /* 入力ベクトル */
+						const vector<vector<double>> &t_v,			   /* 教師ベクトル */
+						const std::string path_E_his = "",			   /* 全データの誤差 E の履歴出力先 */
+						const std::string path_learned_param = "",	   /*  学習済みのパラメータの出力先 */
 						const std::string convergence_mode = "deltaE", /* 収束条件（ここを変えると収束判定の方法が変わる） */
-						double epsilon = 1E-4,							/* 収束判定値 */
-						int limit = -1);								/* 打ち切り試行回数 */
+						double epsilon = 1E-4,						   /* 収束判定値 */
+						int limit = -1);							   /* 打ち切り試行回数 */
 
 		//自己符号化による事前学習
 		void prelearning(const vector<vector<double>> &x_v,

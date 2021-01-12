@@ -4,9 +4,8 @@ import transform as tr
 from ctypes import *
 user32 = windll.user32
 
+
 # 入力された文字列が数値を表すかを判定
-
-
 def is_num(s):
     try:
         float(s)
