@@ -33,7 +33,7 @@ int main(void)
 	-----------------------------------------------*/
 	/* データセットのフォーマットが変更されているため，
 	このプログラムも変更が必要 */
-	std::ifstream ifs("../data_set/1.csv");
+	std::ifstream ifs("data_set.csv");
 	if (!ifs)
 		throw std::fstream::failure("Cannot open");
 	std::string line;
@@ -43,19 +43,36 @@ int main(void)
 	double xt_std;
 	double tt_mean;
 	double tt_std;
+	double yt;
+
+	/* yt */
+	std::getline(ifs, line);
+	std::getline(ifs, line);
+	yt = so::split(line, ',')[0];
+
+	/* mean */
+	std::getline(ifs, line);
 	std::getline(ifs, line);
 	{
-		vector<double> tmp = so::split(line, ',');
-		xt_mean = tmp[0];
-		xt_std = tmp[1];
-		tt_mean = tmp[2];
-		tt_std = tmp[3];
+		vector<double> tmp = so::split(line.substr(0, line.size() - 1), ',');
+		xt_mean = tmp[input_data_dim];
+		tt_mean = tmp[input_data_dim + 1];
+	}
+
+	/* std */
+	std::getline(ifs, line);
+	std::getline(ifs, line);
+	{
+		vector<double> tmp = so::split(line.substr(0, line.size() - 1), ',');
+		xt_std = tmp[input_data_dim];
+		tt_std = tmp[input_data_dim + 1];
 	}
 
 	/* データセット */
 	vector<vector<double>> data_set;
+	std::getline(ifs, line);
 	while (std::getline(ifs, line))
-		data_set.emplace_back(so::split(line, ','));
+		data_set.emplace_back(so::split(line.substr(0, line.size() - 1), ','));
 
 	/*-----------------------------------------------
 	*

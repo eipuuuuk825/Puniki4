@@ -139,18 +139,21 @@ void so::NeuralNetwork::init()
 	if (nn_mode != MODE_C and nn_mode != MODE_R)
 		my_exception(__FNAME__, "invalid nn_mode [" + nn_mode + "]");
 
+	// z = vector<vector<double>>
 	z.resize(L);
 	for (size_t l = 0; l < L; ++l)
 	{
-		z[l].resize(n[l] + 1); //バイアスを出力するニューロンを余分に確保
-		z[l][0] = 1.0;		   //バイアスニューロンの出力を設定
+		z[l].resize(n[l] + 1); //バイアスの分を余分に確保
+		z[l][0] = 1.0;		   //バイアスニューロンの出力は常に１
 	}
+
 	d.resize(L);
 	for (size_t l = 1; l < L; ++l)
-	{						   //d[0][i]は入力層だから誤差計算は必要ない
-		d[l].resize(n[l] + 1); //逆伝播する誤差を各層の各ニューロンに用意	添え字に注意
-		d[l][0] = 0.0;		   //各層の0番目のニューロンからは誤差が伝播しない
+	{ //d[0][i]は入力層だから誤差計算は必要ない
+		d[l].resize(n[l] + 1);
+		d[l][0] = 0.0; //バイアスは誤差計算に関係ない（初期化不要？）
 	}
+
 	w.resize(L - 1); //L層あるから層間の数はL-1
 	for (size_t l = 0; l < L - 1; ++l)
 	{
@@ -217,7 +220,7 @@ std::vector<double> so::NeuralNetwork::compute(const vector<double> &x)
 				z[l][k] = sigmoid(sum);
 		}
 	}
-	vector<double> output(z[L - 1].begin() + 1, z[L - 1].end()); //最終層の出力を格納
+	vector<double> output(z[L - 1].begin() + 1, z[L - 1].end()); //最終層の出力を格納	// TODO:.back() を使って簡略化
 	return std::move(output);
 }
 

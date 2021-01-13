@@ -14,8 +14,8 @@ path_E_output = "data/E.csv"
 path_result_output = "data/result.csv"
 path_param_output = "data/param.csv"
 
-# neuron_num = [18, 10, 2]
-neuron_num = [36, 24, 13, 2]
+neuron_num = [18, 10, 2]
+# neuron_num = [36, 24, 13, 2]
 # neuron_num = [54, 35, 19, 2]
 
 eta = 0.1
@@ -102,8 +102,8 @@ def main():
     xy_max = np.max(result[:, 0:2])
     xy_min = np.min(result[:, 0:2])
     g_x = fig.add_subplot(1, 2, 1)
-    plt.scatter(result[:, 0:1], result[:, 1:2])
     plt.plot([xy_min, xy_max], [xy_min, xy_max], color="orange")
+    plt.scatter(result[:, 0:1], result[:, 1:2])
     plt.title("x ("+f'{coef_x:.3f}'+")")
     plt.xlabel("true x [px]")
     plt.ylabel("predict x [px]")
@@ -112,8 +112,8 @@ def main():
     xy_max = np.max(result[:, 2:4])
     xy_min = np.min(result[:, 2:4])
     g_t = fig.add_subplot(1, 2, 2)
-    plt.scatter(result[:, 2:3], result[:, 3:4])
     plt.plot([xy_min, xy_max], [xy_min, xy_max], color="orange")
+    plt.scatter(result[:, 2:3], result[:, 3:4])
     plt.title("t ("+f'{coef_t:.3f}'+")")
     plt.xlabel("true t [sec]")
     plt.ylabel("predict t [sec]")
