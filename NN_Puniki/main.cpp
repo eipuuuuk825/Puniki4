@@ -24,7 +24,7 @@ int main(void)
 	const vector<size_t> neural_num{18, 10, 2};
 	// const vector<size_t> neural_num{12, 7, 2};
 	// const vector<size_t> neural_num{9, 6, 2};
-	const double eta = 0.1;
+	const double eta = 0.05;
 
 	/*-----------------------------------------------
 	*

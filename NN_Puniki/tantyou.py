@@ -20,9 +20,11 @@ with open("E.csv") as fileobj:
             break
 
 pre_val = 1E9
+err_cnt = 0
 for i in range(len(E)):
     if pre_val < E[i]:
-        print("error ", i, "/", len(E), pre_val, E[i])
-        exit()
+        err_cnt += 1
+        # print("error ", i, "/", len(E), pre_val, E[i])
     pre_val = E[i]
 
+print(err_cnt)

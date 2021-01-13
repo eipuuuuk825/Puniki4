@@ -139,7 +139,6 @@ void so::NeuralNetwork::init()
 	if (nn_mode != MODE_C and nn_mode != MODE_R)
 		my_exception(__FNAME__, "invalid nn_mode [" + nn_mode + "]");
 
-	// z = vector<vector<double>>
 	z.resize(L);
 	for (size_t l = 0; l < L; ++l)
 	{
