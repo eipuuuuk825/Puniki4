@@ -7,12 +7,12 @@ import param as pa
 import utility
 
 # パラメータ
-path_raw_data_input = "../../data_raw/2021-01-08/"
+path_raw_data_input = "../../data_raw/stage1/"
 path_data_set_output = "data/data_set.csv"
-first_input_num = 0     # 入力する最初の座標
-input_point_num = 6    # 入力データとして使う座標の数
+first_input_num = 12     # 入力する最初の座標
+input_point_num = 12    # 入力データとして使う座標の数
 input_point_step = 1    # 入力する座標の間隔
-max_point_num = 20      # 入力として使える座標の最大個数
+max_point_num = 24      # 入力として使える座標の最大個数
 use_y_data = True       # y 座標のデータを使うか
 predict_y = 420         # 予測する x, t に対応する y 座標
 
@@ -24,6 +24,10 @@ def calc_teacher_data(x, y, t):
         if yi >= predict_y:
             break
         i += 1
+
+    if len(y) == i:
+        print(predict_y, "に対応する教師データを計算できませんでした．")
+        return 0, 0
 
     dy1 = y[i] - predict_y
     dy2 = predict_y - y[i-1]
@@ -74,11 +78,17 @@ def normalize(x, y, t, xt, tt):
 
 
 def main():
+    # エラーチェック
+    if first_input_num + input_point_num*input_point_step > max_point_num:
+        print("max_point_num", max_point_num, "を超えています")
+        exit()
+
     #
     # ファイル名一覧を取得
     #
     files = os.listdir(path_raw_data_input)
-    files = [f for f in files if os.path.isfile(os.path.join(path_raw_data_input, f))]
+    files = [f for f in files if os.path.isfile(
+        os.path.join(path_raw_data_input, f))]
 
     #
     # in_file からデータを読み込み，加工する
@@ -104,12 +114,22 @@ def main():
                     ti.append(data_list[2])
                 else:
                     break
-        x.append(xi[0:max_point_num])
-        y.append(yi[0:max_point_num])
-        t.append(ti[0:max_point_num])
+
+            if len(xi) < max_point_num or\
+                    len(yi) < max_point_num or\
+                    len(ti) < max_point_num:
+                print("max_point_num", max_point_num, "の値が不適切です")
+                print("xi", len(xi), "yi", len(yi), "ti", len(ti))
+                exit()
+            x.append(xi[0:max_point_num])
+            y.append(yi[0:max_point_num])
+            t.append(ti[0:max_point_num])
 
         # 教師データ xt, tt を求める
         xti, tti = calc_teacher_data(xi, yi, ti)
+        if (xti, tti) == (0, 0):
+            print(in_file, files[in_file])
+            exit()
         xt.append(xti)
         tt.append(tti)
 

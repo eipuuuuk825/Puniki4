@@ -4,6 +4,8 @@ import param as pa
 import judge
 import plot
 import capture as cap
+import utility
+# 自分のじゃないの
 import cv2
 import numpy as np
 import time
@@ -14,7 +16,7 @@ import datetime  # 現在時刻取得
 from ctypes import *
 user32 = windll.user32
 
-path_data_output = "../../data_raw/stage4_2021-01-09/"
+path_data_output = "../../data_raw/stage1_2021-01-15/"
 
 
 def main():
@@ -71,6 +73,7 @@ def main():
             ball.clear()
             detect_flag = 0
             start_flag = False
+            utility.next_game()
             continue
 
         # detect_flag の管理

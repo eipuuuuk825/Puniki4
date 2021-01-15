@@ -2,6 +2,7 @@
 # 7763c160b4ec1caa99718cd3c865339227a1908e
 
 import numpy as np
+import random
 import matplotlib.pyplot as plt
 import so
 import utility
@@ -13,9 +14,12 @@ path_data_set = "data/data_set.csv"
 path_E_output = "data/E.csv"
 path_result_output = "data/result.csv"
 path_param_output = "data/param.csv"
+data_num = 300
+training_data_num = 50
+display_graph = False   # 散布図を表示するか
 
-neuron_num = [18, 10, 2]
-# neuron_num = [36, 24, 13, 2]
+# neuron_num = [18, 10, 2]
+neuron_num = [36, 24, 13, 2]
 # neuron_num = [54, 35, 19, 2]
 
 eta = 0.1
@@ -51,10 +55,11 @@ def main():
     #
     # NN に渡すデータを用意
     #
-    data_training_x = np.array(data_set)[0:50, :-2]
-    data_training_t = np.array(data_set)[0:50, -2:]
-    data_test_x = np.array(data_set)[50:100, :-2]
-    data_test_t = np.array(data_set)[50:100, -2:]
+    random.shuffle(data_set)    # ランダムに並び変える
+    data_training_x = np.array(data_set)[:training_data_num, :-2]
+    data_training_t = np.array(data_set)[:training_data_num, -2:]
+    data_test_x = np.array(data_set)[training_data_num:, :-2]
+    data_test_t = np.array(data_set)[training_data_num:, -2:]
 
     #
     # NN
@@ -97,28 +102,31 @@ def main():
     #
     # 散布図を描画
     #
-    fig = plt.figure(figsize=(12, 6))
-    # x
-    xy_max = np.max(result[:, 0:2])
-    xy_min = np.min(result[:, 0:2])
-    g_x = fig.add_subplot(1, 2, 1)
-    plt.plot([xy_min, xy_max], [xy_min, xy_max], color="orange")
-    plt.scatter(result[:, 0:1], result[:, 1:2])
-    plt.title("x ("+f'{coef_x:.3f}'+")")
-    plt.xlabel("true x [px]")
-    plt.ylabel("predict x [px]")
-    plt.grid(True)
-    # t
-    xy_max = np.max(result[:, 2:4])
-    xy_min = np.min(result[:, 2:4])
-    g_t = fig.add_subplot(1, 2, 2)
-    plt.plot([xy_min, xy_max], [xy_min, xy_max], color="orange")
-    plt.scatter(result[:, 2:3], result[:, 3:4])
-    plt.title("t ("+f'{coef_t:.3f}'+")")
-    plt.xlabel("true t [sec]")
-    plt.ylabel("predict t [sec]")
-    plt.grid(True)
-    plt.show()
+    if display_graph:
+        fig = plt.figure(figsize=(12, 6))
+        # x
+        xy_max = np.max(result[:, 0:2])
+        xy_min = np.min(result[:, 0:2])
+        g_x = fig.add_subplot(1, 2, 1)
+        plt.plot([xy_min, xy_max], [xy_min, xy_max], color="orange")
+        plt.scatter(result[:, 0:1], result[:, 1:2])
+        plt.title("x ("+f'{coef_x:.3f}'+")")
+        plt.xlabel("true x [px]")
+        plt.ylabel("predict x [px]")
+        plt.grid(True)
+        # t
+        xy_max = np.max(result[:, 2:4])
+        xy_min = np.min(result[:, 2:4])
+        g_t = fig.add_subplot(1, 2, 2)
+        plt.plot([xy_min, xy_max], [xy_min, xy_max], color="orange")
+        plt.scatter(result[:, 2:3], result[:, 3:4])
+        plt.title("t ("+f'{coef_t:.3f}'+")")
+        plt.xlabel("true t [sec]")
+        plt.ylabel("predict t [sec]")
+        plt.grid(True)
+        plt.show()
+
+    return coef_x, coef_t
 
 
 if __name__ == '__main__':

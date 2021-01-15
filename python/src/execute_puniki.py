@@ -263,22 +263,23 @@ class Puniki:
     # バット先端を目標位置に合わせる
     def set_pos(self, tip_tgt_pos):
         margin = 10
-        pos_lu = (margin, margin)
-        pos_ru = (pa.RECT_MAIN[2]-margin, margin)
-        pos_ld = (margin, pa.RECT_MAIN[3]-margin)
-        pos_rd = (pa.RECT_MAIN[2]-margin, pa.RECT_MAIN[3]-margin)
+        pos_lu = (margin, margin)                                   # 左上
+        pos_ru = (pa.RECT_MAIN[2]-margin, margin)                   # 右上
+        pos_ld = (margin, pa.RECT_MAIN[3]-margin)                   # 左下
+        pos_rd = (pa.RECT_MAIN[2]-margin, pa.RECT_MAIN[3]-margin)   # 右下
 
         cursor_pos = (0, 0)
         if self.pos_tip[0] > tip_tgt_pos[0]:
             if self.pos_tip[1] > tip_tgt_pos[1]:
-                cursor_pos = pos_lu
+                cursor_pos = pos_lu     # カーソルの移動位置を左上に
             else:
-                cursor_pos = pos_ld
+                cursor_pos = pos_ld     # カーソルの移動位置を左下に
         elif self.pos_tip[1] > tip_tgt_pos[1]:
-            cursor_pos = pos_ru
+            cursor_pos = pos_ru         # カーソルの移動位置を右上に
         else:
-            cursor_pos = pos_rd
-        utility.set_cursor(cursor_pos)
+            cursor_pos = pos_rd         # カーソルの移動位置を右下に
+
+        utility.set_cursor(cursor_pos)  # カーソルを移動
 
     # スイングする
     def swing(self, predict, time_throw):
