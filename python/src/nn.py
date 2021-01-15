@@ -18,8 +18,8 @@ data_num = 300
 training_data_num = 50
 display_graph = False   # 散布図を表示するか
 
-# neuron_num = [18, 10, 2]
-neuron_num = [36, 24, 13, 2]
+neuron_num = [18, 10, 2]
+# neuron_num = [36, 24, 13, 2]
 # neuron_num = [54, 35, 19, 2]
 
 eta = 0.1
@@ -103,6 +103,7 @@ def main():
     # 散布図を描画
     #
     if display_graph:
+        font_size = 15
         fig = plt.figure(figsize=(12, 6))
         # x
         xy_max = np.max(result[:, 0:2])
@@ -110,9 +111,10 @@ def main():
         g_x = fig.add_subplot(1, 2, 1)
         plt.plot([xy_min, xy_max], [xy_min, xy_max], color="orange")
         plt.scatter(result[:, 0:1], result[:, 1:2])
-        plt.title("x ("+f'{coef_x:.3f}'+")")
-        plt.xlabel("true x [px]")
-        plt.ylabel("predict x [px]")
+        plt.title("xt (相関係数："+f'{coef_x:.3f}'+")",
+                  fontname="MS Gothic", fontsize=font_size)
+        plt.xlabel("xt の真値 [px]", fontname="MS Gothic", fontsize=font_size)
+        plt.ylabel("xt の予測値 [px]", fontname="MS Gothic", fontsize=font_size)
         plt.grid(True)
         # t
         xy_max = np.max(result[:, 2:4])
@@ -120,9 +122,10 @@ def main():
         g_t = fig.add_subplot(1, 2, 2)
         plt.plot([xy_min, xy_max], [xy_min, xy_max], color="orange")
         plt.scatter(result[:, 2:3], result[:, 3:4])
-        plt.title("t ("+f'{coef_t:.3f}'+")")
-        plt.xlabel("true t [sec]")
-        plt.ylabel("predict t [sec]")
+        plt.title("tt (相関係数："+f'{coef_t:.3f}'+")",
+                  fontname="MS Gothic", fontsize=font_size)
+        plt.xlabel("tt の真値 [sec]", fontname="MS Gothic", fontsize=font_size)
+        plt.ylabel("tt の予測値 [sec]", fontname="MS Gothic", fontsize=font_size)
         plt.grid(True)
         plt.show()
 
