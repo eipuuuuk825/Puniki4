@@ -8,7 +8,7 @@ def main():
     coef_x = []
     coef_t = []
     for i in range(loop_num):
-        x, t = nn.main()
+        x, t = nn.main(True)
         coef_x.append(x)
         coef_t.append(t)
         print(str(i+1)+" / "+str(loop_num))

@@ -9,11 +9,12 @@ import utility
 # パラメータ
 path_raw_data_input = "../../data_raw/stage1/"
 path_data_set_output = "data/data_set.csv"
-first_input_num = 12     # 入力する最初の座標
+first_input_num = 0     # 入力する最初の座標
 input_point_num = 12    # 入力データとして使う座標の数
 input_point_step = 1    # 入力する座標の間隔
 max_point_num = 24      # 入力として使える座標の最大個数
 use_y_data = True       # y 座標のデータを使うか
+use_t_data = True         # y のデータを使うか
 predict_y = 420         # 予測する x, t に対応する y 座標
 
 
@@ -59,7 +60,9 @@ def normalize(x, y, t, xt, tt):
     data_array = np.array(x_input)
     if use_y_data:
         data_array = np.append(data_array, y_input, axis=1)
-    data_array = np.append(data_array, t_input, axis=1)
+    if use_t_data:
+        data_array = np.append(data_array, t_input, axis=1)
+
     xt_array = np.array(xt).reshape(len(xt), 1)
     tt_array = np.array(tt).reshape(len(tt), 1)
     data_array = np.append(data_array, xt_array, axis=1)

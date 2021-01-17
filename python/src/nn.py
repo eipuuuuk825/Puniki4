@@ -16,16 +16,18 @@ path_result_output = "data/result.csv"
 path_param_output = "data/param.csv"
 data_num = 300
 training_data_num = 50
-display_graph = False   # 散布図を表示するか
 
-neuron_num = [18, 10, 2]
-# neuron_num = [36, 24, 13, 2]
+# neuron_num = [6, 4, 2]
+# neuron_num = [12, 7, 2]
+# neuron_num = [18, 10, 2]
+# neuron_num = [24, 13, 2]
+neuron_num = [36, 24, 13, 2]
 # neuron_num = [54, 35, 19, 2]
 
 eta = 0.1
 
 
-def main():
+def main(outer_flag = False):
     #
     # ファイルからデータセットを読み込む
     #
@@ -64,7 +66,7 @@ def main():
     #
     # NN
     #
-    nn = so.NeuralNetwork(neuron_num, eta, "regression")
+    nn = so.NeuralNetwork(neuron_num, eta, "classification")
     nn.learning(data_training_x, data_training_t,
                 path_E_output, path_param_output)
     # nn = so.NeuralNetwork("regression", "param.csv")
@@ -102,7 +104,7 @@ def main():
     #
     # 散布図を描画
     #
-    if display_graph:
+    if not outer_flag:
         font_size = 15
         fig = plt.figure(figsize=(12, 6))
         # x
@@ -113,8 +115,8 @@ def main():
         plt.scatter(result[:, 0:1], result[:, 1:2])
         plt.title("xt (相関係数："+f'{coef_x:.3f}'+")",
                   fontname="MS Gothic", fontsize=font_size)
-        plt.xlabel("xt の真値 [px]", fontname="MS Gothic", fontsize=font_size)
-        plt.ylabel("xt の予測値 [px]", fontname="MS Gothic", fontsize=font_size)
+        plt.xlabel("xt の真値 [-]", fontname="MS Gothic", fontsize=font_size)
+        plt.ylabel("xt の予測値 [-]", fontname="MS Gothic", fontsize=font_size)
         plt.grid(True)
         # t
         xy_max = np.max(result[:, 2:4])
@@ -124,8 +126,8 @@ def main():
         plt.scatter(result[:, 2:3], result[:, 3:4])
         plt.title("tt (相関係数："+f'{coef_t:.3f}'+")",
                   fontname="MS Gothic", fontsize=font_size)
-        plt.xlabel("tt の真値 [sec]", fontname="MS Gothic", fontsize=font_size)
-        plt.ylabel("tt の予測値 [sec]", fontname="MS Gothic", fontsize=font_size)
+        plt.xlabel("tt の真値 [-]", fontname="MS Gothic", fontsize=font_size)
+        plt.ylabel("tt の予測値 [-]", fontname="MS Gothic", fontsize=font_size)
         plt.grid(True)
         plt.show()
 
